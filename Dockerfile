@@ -10,35 +10,24 @@ COPY web/ .
 RUN npm run build
 
 
-# ----------- STAGE 2: BUILD BACKEND -----------
-FROM node:20 AS backend-build
-
-WORKDIR /app/api
-
-COPY api/package*.json ./
-RUN npm install
-
-COPY api/ .
-RUN npm run build
-
-
-# ----------- STAGE 3: FINAL IMAGE -----------
+# ----------- STAGE 2: SETUP BACKEND -----------
 FROM node:20
 
 WORKDIR /app
 
-# Copy backend build
-COPY --from=backend-build /app/api /app/api
+# Copy backend
+COPY api/package*.json ./api/
+WORKDIR /app/api
+RUN npm install
 
-# Copy frontend build
-# VITE → dist
-COPY --from=frontend-build /app/web/dist /app/web/dist
+COPY api/ .
 
-# Install serve to host frontend
-RUN npm install -g serve
+# Copy frontend build into backend
+WORKDIR /app
+COPY --from=frontend-build /app/web/dist ./web/dist
 
-# Expose backend port
+# Expose port
 EXPOSE 5000
 
-# Start both frontend + backend
-CMD sh -c "serve -s /app/web/dist -l 3000 & node /app/api/dist/server.js"
+# Run backend
+CMD ["node", "api/src/server.js"]
