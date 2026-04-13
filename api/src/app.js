@@ -7,7 +7,7 @@ import env from './config/env.js';
 
 const app = express();
 
-app.use(cors({ origin: env.corsOrigin }));
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 app.use(morgan('dev'));
 

@@ -1,0 +1,5 @@
+# Exclude backend from frontend-only Vercel deployment
+api/**
+docker-compose.yml
+.env.example
+AI_LOG.md

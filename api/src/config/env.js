@@ -15,7 +15,7 @@ const env = {
   refreshSecret: process.env.JWT_REFRESH_SECRET,
   accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
   refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
-  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000'
+  corsOrigin: process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? 'https://yourdomain.com' : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'])
 };
 
 for (const key of ['accessSecret', 'refreshSecret']) {

@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+:root {
+  --surface-1: #04080f;
+  --surface-2: #0b1220;
+  --surface-3: #121a2b;
+  --accent-1: #22d3ee;
+  --accent-2: #38bdf8;
+  --ring: rgba(56, 189, 248, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-manrope), sans-serif;
+  background:
+    radial-gradient(1200px circle at 12% 10%, rgba(34, 211, 238, 0.16), transparent 40%),
+    radial-gradient(1000px circle at 84% 84%, rgba(56, 189, 248, 0.14), transparent 42%),
+    linear-gradient(180deg, var(--surface-2), var(--surface-1));
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-space-grotesk), sans-serif;
+}
+
+input,
+button {
+  font: inherit;
+}
+
+button,
+input {
+  outline: none;
+}
+
+button:focus-visible,
+input:focus-visible {
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+.glass {
+  backdrop-filter: blur(10px);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.78), rgba(2, 6, 23, 0.82));
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.title-glow {
+  text-shadow: 0 0 30px rgba(34, 211, 238, 0.35);
+}
