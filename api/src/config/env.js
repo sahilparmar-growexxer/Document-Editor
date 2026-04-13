@@ -15,12 +15,16 @@ function resolveSecret(primaryKey, sharedKey, label) {
 const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT || 5000),
-  databaseUrl: process.env.DATABASE_URL,
-  dbHost: process.env.PGHOST || 'localhost',
+  databaseUrl:
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRESQL_URL ||
+    process.env.RENDER_POSTGRES_URL,
+  dbHost: process.env.PGHOST || (process.env.NODE_ENV === 'production' ? undefined : 'localhost'),
   dbPort: Number(process.env.PGPORT || 5432),
-  dbUser: process.env.PGUSER || 'postgres',
-  dbPassword: process.env.PGPASSWORD || 'postgres',
-  dbName: process.env.PGDATABASE || 'blocknote',
+  dbUser: process.env.PGUSER || (process.env.NODE_ENV === 'production' ? undefined : 'postgres'),
+  dbPassword: process.env.PGPASSWORD || (process.env.NODE_ENV === 'production' ? undefined : 'postgres'),
+  dbName: process.env.PGDATABASE || (process.env.NODE_ENV === 'production' ? undefined : 'blocknote'),
   accessSecret: resolveSecret('JWT_ACCESS_SECRET', 'JWT_SECRET', 'access'),
   refreshSecret: resolveSecret('JWT_REFRESH_SECRET', 'JWT_SECRET', 'refresh'),
   accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',

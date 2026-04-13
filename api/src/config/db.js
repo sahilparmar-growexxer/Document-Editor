@@ -30,6 +30,10 @@ function buildPoolConfig() {
     };
   }
 
+  if (env.nodeEnv === 'production') {
+    throw new Error('Database configuration missing. Set DATABASE_URL (or POSTGRES_URL) or PGHOST/PGPORT/PGUSER/PGPASSWORD/PGDATABASE in production.');
+  }
+
   return {
     host: env.dbHost,
     port: env.dbPort,
