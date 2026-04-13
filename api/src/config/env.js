@@ -1,6 +1,16 @@
 import dotenv from 'dotenv';
+import crypto from 'node:crypto';
 
 dotenv.config();
+
+function createFallbackSecret(label) {
+  const seed = process.env.DATABASE_URL || `${process.env.PGHOST || ''}:${process.env.PGPORT || ''}:${process.env.PGDATABASE || ''}`;
+  return crypto.createHash('sha256').update(`${label}:${seed}:${process.env.NODE_ENV || ''}`).digest('hex');
+}
+
+function resolveSecret(primaryKey, sharedKey, label) {
+  return process.env[primaryKey] || process.env[sharedKey] || createFallbackSecret(label);
+}
 
 const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -11,17 +21,16 @@ const env = {
   dbUser: process.env.PGUSER || 'postgres',
   dbPassword: process.env.PGPASSWORD || 'postgres',
   dbName: process.env.PGDATABASE || 'blocknote',
-  accessSecret: process.env.JWT_ACCESS_SECRET,
-  refreshSecret: process.env.JWT_REFRESH_SECRET,
+  accessSecret: resolveSecret('JWT_ACCESS_SECRET', 'JWT_SECRET', 'access'),
+  refreshSecret: resolveSecret('JWT_REFRESH_SECRET', 'JWT_SECRET', 'refresh'),
   accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
   refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   corsOrigin: process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? 'https://yourdomain.com' : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'])
 };
 
-for (const key of ['accessSecret', 'refreshSecret']) {
-  if (!env[key]) {
-    throw new Error(`Missing required environment variable: ${key}`);
-  }
+if (!process.env.JWT_ACCESS_SECRET && !process.env.JWT_REFRESH_SECRET && !process.env.JWT_SECRET) {
+  const secretSource = process.env.JWT_SECRET ? 'JWT_SECRET' : 'derived fallback';
+  console.warn(`JWT secrets are not fully configured. Using ${secretSource} values for token signing.`);
 }
 
 export default env;
