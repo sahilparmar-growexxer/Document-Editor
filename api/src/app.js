@@ -4,6 +4,8 @@ import morgan from 'morgan';
 import routes from './routes/index.js';
 import errorMiddleware from './common/middleware/error.middleware.js';
 import env from './config/env.js';
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 
