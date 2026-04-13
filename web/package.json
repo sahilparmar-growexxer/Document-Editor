@@ -3,17 +3,18 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "dev:clean": "rm -rf .next node_modules/.cache && next dev",
-    "build": "next build",
-    "start": "next start"
+    "dev": "vite",
+    "dev:clean": "rm -rf dist node_modules/.vite && vite",
+    "build": "vite build",
+    "start": "vite preview"
   },
   "dependencies": {
-    "next": "^16.2.3",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "react-router-dom": "^7.6.3"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.2",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/node": "25.6.0",
     "@types/react": "19.2.14",

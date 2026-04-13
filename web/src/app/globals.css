@@ -20,7 +20,7 @@ body {
 }
 
 body {
-  font-family: var(--font-manrope), sans-serif;
+  font-family: 'Manrope', sans-serif;
   background:
     radial-gradient(1200px circle at 12% 10%, rgba(34, 211, 238, 0.16), transparent 40%),
     radial-gradient(1000px circle at 84% 84%, rgba(56, 189, 248, 0.14), transparent 42%),
@@ -31,7 +31,7 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-space-grotesk), sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
 }
 
 input,

@@ -58,3 +58,31 @@ Add Tailwind CSS and make the UI attractive with dark theme and cyan accents.
 2. **Added CSS variables** — Created custom --surface-*, --accent-*, --ring variables for consistent theming across components.
 3. **Added dev:clean script** to package.json: `rm -rf .next node_modules/.cache && next dev`. Why: Prevents recurring webpack chunk cache invalidation issues without manual intervention.
 
+---
+
+## 2026-04-13 (Frontend Migration: Next.js to React + Vite)
+
+**Tool:** GitHub Copilot Chat
+
+**What I asked for:**
+Convert the entire frontend from Next.js to React.js.
+
+**What it generated:**
+- A Vite-based React frontend scaffold
+- React Router routes for home, login, register, and dashboard screens
+- A React entry point (`main.jsx`) and router shell (`App.jsx`)
+- Vite-compatible environment variable handling and static deployment rewrite config
+
+**What was wrong or missing:**
+- The first pass still used Next.js assumptions in the package scripts and environment variable prefixing
+- Vite initially would have run on its default port, which would have conflicted with the existing backend CORS setup
+- The README still described the frontend as Next.js after the migration
+
+**What I changed and why:**
+1. **Replaced Next.js with Vite + React Router** — Removed Next-specific entry points and moved the UI to a static React app. This made the frontend simpler, faster to build, and easier to deploy separately from the backend.
+2. **Changed env handling to `VITE_API_URL`** — Updated the API client and `.env.local` to use Vite’s browser-exposed env prefix. This is required because Next’s `NEXT_PUBLIC_*` variables do not work in Vite.
+3. **Pinned Vite to port 3000** — Configured the dev server and preview server to use port 3000 so the existing backend CORS policy stayed valid and local development remained predictable.
+4. **Added Vercel SPA rewrites** — Configured `vercel.json` so route refreshes like `/dashboard` resolve correctly after a static Vite build.
+5. **Updated the README** — Rewrote the frontend setup, environment variables, and troubleshooting sections so the docs match the new stack.
+6. **Verified the build** — Ran a clean Vite production build and confirmed it completed successfully before closing out the migration.
+

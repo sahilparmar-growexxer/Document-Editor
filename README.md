@@ -1,13 +1,13 @@
 # BlockNote — Production-Ready Block Editor (Day 1)
 
-A full-stack Notion-like document editor built with Node.js + Express, PostgreSQL, and Next.js. Includes user authentication, document CRUD, inline renaming, and a foundation for collaborative block editing.
+A full-stack Notion-like document editor built with Node.js + Express, PostgreSQL, and a React + Vite frontend. Includes user authentication, document CRUD, inline renaming, and a foundation for collaborative block editing.
 
 ## Quick Start
 
 ### Prerequisites
 - Docker & Docker Compose (for PostgreSQL)
-- Node.js 18+ (backend) and npm
-- Node.js 18+ (frontend, via Next.js)
+- Node.js 18+ (backend and frontend)
+- npm
 
 ### Run Locally
 
@@ -63,9 +63,9 @@ Frontend runs on http://localhost:3000
 
 | Variable | Purpose | Example |
 |----------|---------|---------|
-| `NEXT_PUBLIC_API_URL` | Backend API base URL | `http://localhost:4000` |
+| `VITE_API_URL` | Backend API base URL | `http://localhost:4000` |
 
-Note: `NEXT_PUBLIC_` prefix makes this available in browser (used by apiClient.js).
+Note: `VITE_` prefix makes this available in browser (used by `apiClient.js`).
 
 ### Docker Compose (`.env` at project root)
 
@@ -142,31 +142,33 @@ api/src/
 - Zod (schema validation)
 - Morgan (HTTP logging)
 
-### Frontend (Next.js 14.2 + React 18.3)
+### Frontend (React 19 + Vite)
 
 **Directory Structure:**
 ```
 web/src/
-├── app/
-│   ├── layout.js                    # Root layout (Tailwind theme, Google Fonts)
-│   ├── globals.css                  # Global Tailwind + custom CSS
-│   ├── page.js                      # Home page (hero section, CTAs)
-│   ├── login/page.js                # Login form
-│   ├── register/page.js             # Register form
-│   └── dashboard/page.js            # Document management (list, create, rename, delete)
+├── App.jsx                          # React Router routes
+├── main.jsx                         # React entry point
+├── pages/
+│   ├── HomePage.jsx                 # Home page (hero section, CTAs)
+│   ├── LoginPage.jsx                # Login form
+│   ├── RegisterPage.jsx             # Register form
+│   └── DashboardPage.jsx            # Document management (list, create, rename, delete)
 └── lib/
     └── apiClient.js                 # Bearer token injection, localStorage management
 ```
 
 **Design Patterns:**
-- **App Router**: Next.js 14 App Router for file-based routing
+- **React Router**: Client-side routes for home, auth, and dashboard screens
 - **State Management**: React hooks (useState) for local state
 - **API Client**: Centralized fetch wrapper with automatic Bearer token injection
 - **Auth Guard**: useEffect checks localStorage token on protected routes, redirects to login if missing
 - **Error Handling**: Try/catch with user-facing error messages
 
 **Tech Stack:**
-- Next.js 14.2.5 (React 18.3.1)
+- React 19.2.5
+- Vite 8
+- React Router DOM 7
 - Tailwind CSS 4.2.2
 - Google Fonts (Manrope, Space Grotesk)
 
@@ -274,6 +276,11 @@ CREATE TABLE schema_migrations (
 - **Dark theme**: Custom CSS variables (--surface-*, --accent-*) for consistent branding
 - **Trade-off**: Learning curve for utility classes, but faster iteration than custom CSS
 
+### 7. **Vite for the Frontend Build Tooling**
+- **Rationale**: Faster dev server and simpler static deployment than Next.js for this UI
+- **Implementation**: React Router handles navigation; Vite serves the app from `index.html`
+- **Trade-off**: We lose file-system routing and server components, but the frontend does not need them here
+
 ---
 
 ## Known Issues & Limitations
@@ -297,7 +304,7 @@ CREATE TABLE schema_migrations (
 - **Timeline**: Low priority (schema ready, endpoint simple to add)
 
 ### 3. **No Production Deployment Setup**
-- **Status**: Docker Compose works locally
+- **Status**: Docker Compose works locally; frontend now builds as a static Vite app
 - **Missing**: 
   - Cloud platform setup (AWS RDS, GCP, Heroku, etc.)
   - Environment variable secrets management
@@ -384,10 +391,12 @@ node --check src/**/*.js  # Lint syntax (no linter configured yet)
 ```bash
 npm install               # Install dependencies
 npm run dev              # Start dev server (http://localhost:3000)
-npm run dev:clean        # Clean Next.js cache + start dev (use if seeing chunk errors)
-npm run build            # Production build (creates .next folder)
+npm run dev:clean        # Clean Vite cache + start dev (use if seeing chunk errors)
+npm run build            # Production build (creates dist/ folder)
 npm start                # Start production server
 ```
+
+Note: the frontend is now React + Vite, so `npm run build` creates a static `dist/` directory and `npm start` runs Vite preview.
 
 ### Docker
 
@@ -437,14 +446,14 @@ curl -X GET http://localhost:4000/documents \
 
 ### "Failed to fetch" on Frontend
 1. Check backend is running: `curl http://localhost:4000/documents` (should return 401 if token missing, not "fetch failed")
-2. Check NEXT_PUBLIC_API_URL in `web/.env.local` matches running backend port
+2. Check `VITE_API_URL` in `web/.env.local` matches the running backend port
 3. Check browser DevTools → Network tab for actual error status codes
 4. Check CORS errors in console (should see "Access-Control-Allow-*" headers in response)
 
-### Next.js Chunk Errors (e.g., "Cannot find module ./129.js")
+### Vite Cache Errors (e.g., stale modules after a rebuild)
 ```bash
 cd web
-npm run dev:clean  # Clears .next cache and restarts dev server
+npm run dev:clean  # Clears Vite cache and restarts dev server
 ```
 
 ### Database Connection Errors
