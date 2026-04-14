@@ -122,3 +122,25 @@ export async function disableDocumentShare(documentId) {
 export async function getSharedDocument(token) {
   return publicApiFetch(`/share/${token}`);
 }
+
+export async function listDocumentComments(documentId) {
+  return apiFetch(`/documents/${documentId}/comments`);
+}
+
+export async function createDocumentComment(documentId, body) {
+  return apiFetch(`/documents/${documentId}/comments`, {
+    method: 'POST',
+    body: JSON.stringify({ body })
+  });
+}
+
+export async function updateCommentResolved(commentId, resolved) {
+  return apiFetch(`/comments/${commentId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ resolved })
+  });
+}
+
+export async function deleteComment(commentId) {
+  return apiFetch(`/comments/${commentId}`, { method: 'DELETE' });
+}

@@ -20,7 +20,7 @@ function normalizeBlocks(rows) {
   });
 }
 
-export default function BlockEditor({ document, onDocumentMetaChange }) {
+export default function BlockEditor({ document, onDocumentMetaChange, showShareControls = true }) {
   const [blocks, setBlocks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -302,22 +302,24 @@ export default function BlockEditor({ document, onDocumentMetaChange }) {
           {saveState === 'error' ? 'Save failed' : null}
         </div>
 
-        <div className="editor-share-actions">
-          {document.is_public ? (
-            <>
-              <button type="button" className="editor-btn" onClick={copyShareLink}>
-                Copy Share Link
+        {showShareControls ? (
+          <div className="editor-share-actions">
+            {document.is_public ? (
+              <>
+                <button type="button" className="editor-btn" onClick={copyShareLink}>
+                  Copy Share Link
+                </button>
+                <button type="button" className="editor-btn editor-btn-danger" onClick={handleDisableShare}>
+                  Disable Share
+                </button>
+              </>
+            ) : (
+              <button type="button" className="editor-btn" onClick={handleEnableShare}>
+                Enable Share
               </button>
-              <button type="button" className="editor-btn editor-btn-danger" onClick={handleDisableShare}>
-                Disable Share
-              </button>
-            </>
-          ) : (
-            <button type="button" className="editor-btn" onClick={handleEnableShare}>
-              Enable Share
-            </button>
-          )}
-        </div>
+            )}
+          </div>
+        ) : null}
       </div>
 
       {error ? <p className="editor-error">{error}</p> : null}
