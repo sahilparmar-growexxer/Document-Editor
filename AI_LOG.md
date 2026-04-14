@@ -1,6 +1,6 @@
 # AI Log - BlockNote Development
 
-## 2024-12-19 (Day 1: Foundation)
+## 2024-04-13 (Day 1: Foundation)
 
 **Tool:** GitHub Copilot Chat
 
@@ -35,7 +35,7 @@ Build a production-ready Notion-like block editor backend and minimal frontend. 
 
 ---
 
-## 2024-12-19 (Day 1: Frontend & Styling)
+## 2024-04-13 (Day 1: Frontend & Styling)
 
 **Tool:** GitHub Copilot Chat
 
@@ -85,4 +85,32 @@ Convert the entire frontend from Next.js to React.js.
 4. **Added Vercel SPA rewrites** — Configured `vercel.json` so route refreshes like `/dashboard` resolve correctly after a static Vite build.
 5. **Updated the README** — Rewrote the frontend setup, environment variables, and troubleshooting sections so the docs match the new stack.
 6. **Verified the build** — Ran a clean Vite production build and confirmed it completed successfully before closing out the migration.
+
+---
+
+## 2026-04-14
+
+**Tool:** GitHub Copilot Chat
+
+**What I asked for:**
+Implement Day 2 core editor behavior: Enter key split, Backspace merge, render all 7 block types, and add a slash command menu.
+
+**What it generated:**
+- Core block editing flow with keyboard handlers for split and merge behavior
+- Renderer coverage for 7 block types used by the editor
+- Slash command trigger/menu scaffold for inserting block types quickly
+- Integration wiring between editor state and block operations
+
+**What was wrong or missing:**
+- Edge cases in split/merge behavior were inconsistent at cursor boundaries
+- Some block render paths needed normalization to avoid fallback rendering
+- Slash menu keyboard navigation and dismissal behavior needed refinement
+- UX polish was incomplete (spacing, visual consistency, and interaction feedback)
+
+**What I changed and why:**
+1. Refined Enter split logic to preserve cursor intent and prevent unexpected empty block artifacts.
+2. Tightened Backspace merge handling so adjacent-block joins are deterministic and do not drop content.
+3. Normalized rendering for all 7 block types to ensure consistent output and reduce type-specific regressions.
+4. Improved slash command behavior (open/close, selection, insertion flow) so command input feels predictable and fast.
+5. Added targeted UI polish to keep editor interactions aligned with the rest of the product experience.
 

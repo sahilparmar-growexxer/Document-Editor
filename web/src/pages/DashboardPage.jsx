@@ -6,7 +6,7 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [isAuthed, setIsAuthed] = useState(false);
   const [documents, setDocuments] = useState([]);
-  const [title, setTitle] = useState('Untitled Document');
+  const [title, setTitle] = useState('');
   const [editingId, setEditingId] = useState('');
   const [editingTitle, setEditingTitle] = useState('');
   const [error, setError] = useState('');
@@ -88,6 +88,25 @@ export default function DashboardPage() {
     }
   }
 
+  async function goToEditor() {
+    setError('');
+
+    try {
+      if (documents.length > 0) {
+        navigate(`/dashboard/${documents[0].id}`);
+        return;
+      }
+
+      const created = await apiFetch('/documents', {
+        method: 'POST',
+        body: JSON.stringify({ title: 'Untitled' })
+      });
+      navigate(`/dashboard/${created.id}`);
+    } catch (err) {
+      setError(err.message || 'Could not open editor');
+    }
+  }
+
   function logout() {
     clearTokens();
     navigate('/login');
@@ -106,8 +125,9 @@ export default function DashboardPage() {
             <p style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0 }}>Create and manage your private documents.</p>
           </div>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <Link
-              to="/"
+            <button
+              type="button"
+              onClick={goToEditor}
               style={{
                 borderRadius: '0.75rem',
                 border: '1px solid #d4d4d8',
@@ -116,7 +136,7 @@ export default function DashboardPage() {
                 padding: '0.5rem 1rem',
                 fontSize: '0.85rem',
                 fontWeight: 600,
-                textDecoration: 'none',
+                cursor: 'pointer',
                 transition: 'border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease',
               }}
               onMouseEnter={(e) => {
@@ -130,8 +150,8 @@ export default function DashboardPage() {
                 e.target.style.backgroundColor = '#fff';
               }}
             >
-              Home
-            </Link>
+              Editor
+            </button>
             <button
               onClick={logout}
               style={{

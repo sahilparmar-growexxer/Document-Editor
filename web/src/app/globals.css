@@ -288,7 +288,7 @@ input:focus-visible {
 }
 
 .bn-top-nav {
-  max-width: 1120px;
+  width: min(1720px, calc(100vw - 1.2rem));
   margin: 0 auto;
   padding: 1rem 1.3rem;
   display: flex;
@@ -341,7 +341,7 @@ input:focus-visible {
 }
 
 .bn-stage {
-  max-width: 1120px;
+  width: min(1720px, calc(100vw - 1.2rem));
   margin: 0 auto;
   padding: 0.6rem 1.3rem 2.2rem;
 }
@@ -404,6 +404,7 @@ input:focus-visible {
   background: #fff;
   overflow: hidden;
   box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+  min-height: 76vh;
 }
 
 .bn-window-head {
@@ -453,8 +454,101 @@ input:focus-visible {
 
 .bn-window-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  min-height: 68vh;
+  grid-template-columns: 260px minmax(0, 1fr) 320px;
+  min-height: 76vh;
+}
+
+.bn-docs-sidebar {
+  border-right: 1px solid #ddd6fe;
+  background:
+    linear-gradient(180deg, #f5f3ff 0%, #eef2ff 45%, #e0f2fe 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+.bn-docs-sidebar-brand {
+  padding: 0.95rem 0.95rem 0.7rem;
+  color: #4c1d95;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.bn-docs-new {
+  margin: 0 0.75rem 0.7rem;
+  border: 1px solid #c4b5fd;
+  border-radius: 0.35rem;
+  background: #ede9fe;
+  color: #5b21b6;
+  padding: 0.36rem 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.bn-docs-new:hover {
+  background: #ddd6fe;
+  border-color: #a78bfa;
+}
+
+.bn-docs-sidebar-divider {
+  border-top: 1px solid #ddd6fe;
+}
+
+.bn-docs-list {
+  padding: 0.6rem 0.45rem 0.75rem;
+  display: grid;
+  gap: 0.2rem;
+  overflow: auto;
+}
+
+.bn-docs-item {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: #334155;
+  text-align: left;
+  padding: 0.48rem 0.52rem;
+  display: grid;
+  gap: 0.06rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.bn-docs-item:hover {
+  border-color: #a78bfa;
+  background: #ede9fe;
+}
+
+.bn-docs-item.is-active {
+  border-color: #8b5cf6;
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.2) 0%, rgba(56, 189, 248, 0.18) 100%);
+}
+
+.bn-docs-item-title {
+  font-size: 0.93rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #1f2937;
+}
+
+.bn-docs-item-meta {
+  font-size: 0.74rem;
+  color: #6b7280;
+}
+
+.bn-docs-empty {
+  margin: 0.25rem 0;
+  font-size: 0.82rem;
+  color: #6b7280;
+  padding: 0.2rem 0.5rem;
 }
 
 .bn-editor-col {
@@ -549,6 +643,65 @@ input:focus-visible {
   flex-direction: column;
   height: 100%;
   background: #fafafa;
+}
+
+.bn-command-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f8fafc;
+  border-left: 1px solid #e5e7eb;
+}
+
+.bn-command-head {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.9rem 0.95rem;
+}
+
+.bn-command-head h3 {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.bn-command-head p {
+  margin: 0.3rem 0 0;
+  font-size: 0.76rem;
+  color: #94a3b8;
+}
+
+.bn-command-list {
+  padding: 0.8rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.bn-command-list button {
+  border: 1px solid #d1d5db;
+  border-radius: 0.55rem;
+  background: #fff;
+  color: #334155;
+  padding: 0.46rem 0.62rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.bn-command-list button:hover {
+  border-color: #a78bfa;
+  background: #faf5ff;
+  color: #6d28d9;
+}
+
+.bn-command-note {
+  margin: auto 0.8rem 0.8rem;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: #94a3b8;
 }
 
 .bn-comments-head {
@@ -668,6 +821,12 @@ input:focus-visible {
 @media (max-width: 1024px) {
   .bn-window-body {
     grid-template-columns: 1fr;
+  }
+
+  .bn-docs-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid #ddd6fe;
+    max-height: 220px;
   }
 
   .bn-editor-col {

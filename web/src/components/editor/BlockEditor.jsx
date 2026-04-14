@@ -20,13 +20,19 @@ function normalizeBlocks(rows) {
   });
 }
 
-export default function BlockEditor({ document, onDocumentMetaChange, showShareControls = true }) {
+export default function BlockEditor({
+  document,
+  onDocumentMetaChange,
+  showShareControls = true,
+  commandRequest = null
+}) {
   const [blocks, setBlocks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [saveState, setSaveState] = useState('saved');
   const [focusRequest, setFocusRequest] = useState(null);
   const [draggingId, setDraggingId] = useState('');
+  const [activeBlockId, setActiveBlockId] = useState('');
 
   const pendingRef = useRef(new Map());
   const revisionRef = useRef(new Map());
@@ -63,6 +69,22 @@ export default function BlockEditor({ document, onDocumentMetaChange, showShareC
     if (!document?.id) return;
     loadDocumentBlocks();
   }, [document?.id]);
+
+  useEffect(() => {
+    if (!commandRequest || !blocks.length) return;
+
+    const targetId = activeBlockId || blocks[blocks.length - 1]?.id;
+    if (!targetId) return;
+
+    if (commandRequest.action === 'insert') {
+      insertBlockAtEnd();
+      return;
+    }
+
+    if (commandRequest.action === 'set-type' && commandRequest.value) {
+      handleTypeChange(targetId, commandRequest.value);
+    }
+  }, [commandRequest?.stamp]);
 
   function queueSave(blockId, payload) {
     const nextRevision = (revisionRef.current.get(blockId) || 0) + 1;
@@ -330,7 +352,7 @@ export default function BlockEditor({ document, onDocumentMetaChange, showShareC
             key={block.id}
             block={block}
             isFirst={index === 0}
-            onFocus={() => {}}
+            onFocus={setActiveBlockId}
             onChange={handleTextChange}
             onSplit={handleSplit}
             onDeleteEmpty={handleDeleteEmpty}
