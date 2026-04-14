@@ -1,5 +1,12 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
+function buildApiUrl(path) {
+  const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+  const nextPath = path.startsWith('/') ? path : `/${path}`;
+
+  return new URL(nextPath, `${baseUrl}/`).toString();
+}
+
 export function getAccessToken() {
   if (typeof window === 'undefined') return '';
   return localStorage.getItem('accessToken') || '';
@@ -28,7 +35,7 @@ export async function apiFetch(path, options = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(buildApiUrl(path), {
     ...options,
     headers
   });
