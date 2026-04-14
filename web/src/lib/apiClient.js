@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'https://document-editor-1-nj6y.onrender.com/';
+const API_URL = 'https://document-editor-1-nj6y.onrender.com/';
 
 function buildApiUrl(path) {
   const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
