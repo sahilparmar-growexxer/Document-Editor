@@ -5,7 +5,9 @@ import app from './app.js';
 import env from './config/env.js';
 import { getClient, query } from './config/db.js';
 import logger from './config/logger.js';
+import dotenv from 'dotenv'
 
+dotenv.config()
 async function migrate() {
   const client = await getClient();
   try {
@@ -51,6 +53,7 @@ async function start() {
   await query('SELECT 1');
   app.listen(env.port, () => {
     logger.info(`API listening on http://localhost:${env.port}`);
+    console.log("DB URL:", process.env.DATABASE_URL);
   });
 }
 
