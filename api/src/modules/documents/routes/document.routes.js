@@ -13,6 +13,8 @@ const router = Router();
 router.use(authMiddleware);
 router.get('/', controller.list);
 router.post('/', validate(createDocumentSchema), controller.create);
+router.post('/:id/share', validate(idParamSchema), controller.enableSharing);
+router.delete('/:id/share', validate(idParamSchema), controller.disableSharing);
 router.patch('/:id', validate(updateDocumentSchema), controller.rename);
 router.delete('/:id', validate(idParamSchema), controller.remove);
 

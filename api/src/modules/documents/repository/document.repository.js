@@ -47,10 +47,36 @@ async function remove(id) {
   await query('DELETE FROM documents WHERE id = $1', [id]);
 }
 
+async function enableSharing(id, token) {
+  const result = await query(
+    `UPDATE documents
+     SET share_token = $2, is_public = TRUE, updated_at = NOW()
+     WHERE id = $1
+     RETURNING id, user_id, title, share_token, is_public, updated_at`,
+    [id, token]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function disableSharing(id) {
+  const result = await query(
+    `UPDATE documents
+     SET share_token = NULL, is_public = FALSE, updated_at = NOW()
+     WHERE id = $1
+     RETURNING id, user_id, title, share_token, is_public, updated_at`,
+    [id]
+  );
+
+  return result.rows[0] || null;
+}
+
 export {
   listByUserId,
   create,
   findById,
   rename,
-  remove
+  remove,
+  enableSharing,
+  disableSharing
 };

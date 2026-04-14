@@ -172,6 +172,12 @@ export default function DashboardPage() {
               <div className="flex w-full items-center justify-between gap-3">
                 <p className="font-medium text-slate-100">{doc.title || 'Untitled'}</p>
                 <div className="flex gap-2">
+                  <Link
+                    to={`/dashboard/${doc.id}`}
+                    className="rounded-lg border border-emerald-400/50 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-200 transition hover:bg-emerald-500/20"
+                  >
+                    Open
+                  </Link>
                   <button
                     type="button"
                     onClick={() => startRename(doc)}

@@ -1,11 +1,14 @@
 import AppError from '../../../common/errors/AppError.js';
 import errorCodes from '../../../common/errors/errorCodes.js';
+import crypto from 'node:crypto';
 import {
   listByUserId,
   create as createDocument,
   findById,
   rename as renameDocument,
-  remove as removeDocument
+  remove as removeDocument,
+  enableSharing as enableDocumentSharing,
+  disableSharing as disableDocumentSharing
 } from '../repository/document.repository.js';
 
 async function list(userId) {
@@ -42,9 +45,38 @@ async function remove(userId, documentId) {
   await removeDocument(documentId);
 }
 
+async function enableSharing(userId, documentId) {
+  const document = await findById(documentId);
+  if (!document) {
+    throw new AppError('Document not found', 404, errorCodes.DOCUMENT_NOT_FOUND);
+  }
+
+  if (document.user_id !== userId) {
+    throw new AppError('Forbidden', 403, errorCodes.FORBIDDEN);
+  }
+
+  const token = crypto.randomUUID();
+  return enableDocumentSharing(documentId, token);
+}
+
+async function disableSharing(userId, documentId) {
+  const document = await findById(documentId);
+  if (!document) {
+    throw new AppError('Document not found', 404, errorCodes.DOCUMENT_NOT_FOUND);
+  }
+
+  if (document.user_id !== userId) {
+    throw new AppError('Forbidden', 403, errorCodes.FORBIDDEN);
+  }
+
+  return disableDocumentSharing(documentId);
+}
+
 export {
   list,
   create,
   rename,
-  remove
+  remove,
+  enableSharing,
+  disableSharing
 };

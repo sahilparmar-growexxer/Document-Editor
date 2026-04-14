@@ -3,7 +3,9 @@ import {
   list as listDocuments,
   create as createDocument,
   rename as renameDocument,
-  remove as removeDocument
+  remove as removeDocument,
+  enableSharing as enableDocumentSharing,
+  disableSharing as disableDocumentSharing
 } from '../service/document.service.js';
 
 async function list(req, res, next) {
@@ -46,4 +48,24 @@ async function remove(req, res, next) {
   }
 }
 
-export { list, create, rename, remove };
+async function enableSharing(req, res, next) {
+  try {
+    const { id } = req.validated.params;
+    const document = await enableDocumentSharing(req.user.id, id);
+    return sendSuccess(res, 200, document);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function disableSharing(req, res, next) {
+  try {
+    const { id } = req.validated.params;
+    const document = await disableDocumentSharing(req.user.id, id);
+    return sendSuccess(res, 200, document);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export { list, create, rename, remove, enableSharing, disableSharing };
