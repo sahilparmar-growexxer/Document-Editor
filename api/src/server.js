@@ -53,7 +53,6 @@ async function start() {
   await query('SELECT 1');
   app.listen(env.port, () => {
     logger.info(`API listening on http://localhost:${env.port}`);
-    console.log("DB URL:", process.env.DATABASE_URL);
   });
 }
 
