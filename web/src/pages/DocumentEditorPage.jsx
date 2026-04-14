@@ -4,6 +4,7 @@ import BlockEditor from '../components/editor/BlockEditor';
 import CommentsPanel from '../components/editor/CommentsPanel';
 import {
   apiFetch,
+  clearTokens,
   enableDocumentShare,
   disableDocumentShare,
   getAccessToken
@@ -94,6 +95,11 @@ export default function DocumentEditorPage() {
     await navigator.clipboard.writeText(`${window.location.origin}/share/${document.share_token}`);
   }
 
+  function logout() {
+    clearTokens();
+    navigate('/login');
+  }
+
   if (loading) {
     return (
       <main className="mx-auto min-h-screen w-full max-w-5xl px-6 py-10 text-slate-200">
@@ -118,9 +124,9 @@ export default function DocumentEditorPage() {
       <header className="bn-top-nav">
         <Link to="/dashboard" className="bn-brand">BlockNote</Link>
         <nav>
-          <a href="https://www.blocknotejs.org/docs" target="_blank" rel="noreferrer">Docs</a>
-          <a href="https://www.blocknotejs.org/examples" target="_blank" rel="noreferrer">Examples</a>
-          <span>Pricing</span>
+          <Link to="/" className="bn-nav-link">Home</Link>
+          <Link to="/dashboard" className="bn-nav-link">Back</Link>
+          <button type="button" onClick={logout} className="bn-nav-button">Logout</button>
         </nav>
       </header>
 

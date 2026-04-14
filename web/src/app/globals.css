@@ -317,6 +317,29 @@ input:focus-visible {
   text-decoration: none;
 }
 
+.bn-nav-link,
+.bn-nav-button {
+  border: 1px solid #d4d4d8;
+  border-radius: 999px;
+  background: #fff;
+  color: #475569;
+  padding: 0.42rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.bn-nav-link:hover,
+.bn-nav-button:hover {
+  border-color: #a78bfa;
+  color: #6d28d9;
+  background: #faf5ff;
+}
+
+.bn-nav-button {
+  cursor: pointer;
+}
+
 .bn-stage {
   max-width: 1120px;
   margin: 0 auto;
