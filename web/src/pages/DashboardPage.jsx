@@ -98,110 +98,253 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-4xl px-6 py-10">
-      <header className="mb-8 flex flex-col justify-between gap-4 rounded-2xl border border-slate-700/70 bg-slate-900/60 p-5 md:flex-row md:items-center">
-        <div>
-          <h1 className="text-3xl font-semibold text-white">Dashboard</h1>
-          <p className="text-sm text-slate-300">Create and manage your private documents.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link
-            to="/"
-            className="rounded-xl border border-slate-600 bg-slate-950/50 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 hover:text-cyan-200"
-          >
-            Home
-          </Link>
+    <main className="bn-page">
+      <div className="bn-stage">
+        <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+          <div>
+            <h1 style={{ fontSize: '2.25rem', fontWeight: 700, color: '#111827', margin: '0 0 0.5rem 0' }}>Dashboard</h1>
+            <p style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0 }}>Create and manage your private documents.</p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <Link
+              to="/"
+              style={{
+                borderRadius: '0.75rem',
+                border: '1px solid #d4d4d8',
+                backgroundColor: '#fff',
+                color: '#4b5563',
+                padding: '0.5rem 1rem',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                textDecoration: 'none',
+                transition: 'border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.borderColor = '#a78bfa';
+                e.target.style.color = '#6d28d9';
+                e.target.style.backgroundColor = '#faf5ff';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.borderColor = '#d4d4d8';
+                e.target.style.color = '#4b5563';
+                e.target.style.backgroundColor = '#fff';
+              }}
+            >
+              Home
+            </Link>
+            <button
+              onClick={logout}
+              style={{
+                borderRadius: '0.75rem',
+                border: '1px solid #d4d4d8',
+                backgroundColor: '#fff',
+                color: '#4b5563',
+                padding: '0.5rem 1rem',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.borderColor = '#a78bfa';
+                e.target.style.color = '#6d28d9';
+                e.target.style.backgroundColor = '#faf5ff';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.borderColor = '#d4d4d8';
+                e.target.style.color = '#4b5563';
+                e.target.style.backgroundColor = '#fff';
+              }}
+            >
+              Logout
+            </button>
+          </div>
+        </header>
+
+        <form onSubmit={createDocument} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', marginBottom: '1.5rem', backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '0.9rem', padding: '1rem' }}>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+            placeholder="Document title"
+            style={{
+              borderRadius: '0.75rem',
+              border: '1px solid #e5e7eb',
+              backgroundColor: '#f9fafb',
+              color: '#1f2937',
+              padding: '0.75rem 1rem',
+              fontSize: '0.95rem',
+            }}
+          />
           <button
-            onClick={logout}
-            className="rounded-xl border border-slate-600 bg-slate-950/50 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-cyan-300 hover:text-cyan-200"
+            type="submit"
+            style={{
+              borderRadius: '0.75rem',
+              backgroundColor: '#8b5cf6',
+              color: '#fff',
+              padding: '0.75rem 1.5rem',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'background-color 0.15s ease',
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#7c3aed'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = '#8b5cf6'}
           >
-            Logout
+            Create
           </button>
-        </div>
-      </header>
+        </form>
 
-      <form onSubmit={createDocument} className="glass mb-6 flex flex-col gap-3 rounded-2xl p-4 md:flex-row">
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-          className="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3 text-slate-100 placeholder-slate-400"
-          placeholder="Document title"
-        />
-        <button
-          type="submit"
-          className="rounded-xl bg-cyan-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300"
-        >
-          Create
-        </button>
-      </form>
+        {error && <p style={{ marginBottom: '1rem', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #fecdd3', backgroundColor: '#fff1f2', color: '#be123c', fontSize: '0.85rem' }}>{error}</p>}
 
-      {error ? <p className="mb-4 rounded-lg border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{error}</p> : null}
-
-      <ul className="space-y-3">
-        {documents.map((doc) => (
-          <li
-            key={doc.id}
-            className="flex items-center justify-between rounded-2xl border border-slate-700/70 bg-slate-900/60 px-4 py-4"
-          >
-            {editingId === doc.id ? (
-              <div className="flex w-full flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <input
-                  value={editingTitle}
-                  onChange={(e) => setEditingTitle(e.target.value)}
-                  className="w-full rounded-xl border border-slate-600 bg-slate-900/60 px-3 py-2 text-sm text-slate-100"
-                />
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => saveRename(doc.id)}
-                    className="rounded-lg bg-cyan-400 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    onClick={cancelRename}
-                    className="rounded-lg border border-slate-600 bg-slate-950/50 px-3 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-400"
-                  >
-                    Cancel
-                  </button>
+        <ul style={{ display: 'grid', gap: '0.75rem' }}>
+          {documents.map((doc) => (
+            <li
+              key={doc.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderRadius: '0.75rem',
+                border: '1px solid #e5e7eb',
+                backgroundColor: '#fff',
+                padding: '1rem',
+                gap: '1rem',
+              }}
+            >
+              {editingId === doc.id ? (
+                <div style={{ display: 'grid', width: '100%', gap: '0.75rem', gridTemplateColumns: '1fr auto' }}>
+                  <input
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    style={{
+                      borderRadius: '0.75rem',
+                      border: '1px solid #e5e7eb',
+                      backgroundColor: '#f9fafb',
+                      color: '#1f2937',
+                      padding: '0.5rem 0.75rem',
+                      fontSize: '0.9rem',
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => saveRename(doc.id)}
+                      style={{
+                        borderRadius: '0.5rem',
+                        backgroundColor: '#8b5cf6',
+                        color: '#fff',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#7c3aed'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#8b5cf6'}
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelRename}
+                      style={{
+                        borderRadius: '0.5rem',
+                        backgroundColor: '#f3f4f6',
+                        color: '#6b7280',
+                        border: '1px solid #e5e7eb',
+                        padding: '0.5rem 0.75rem',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'background-color 0.15s ease, border-color 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#e5e7eb';
+                        e.target.style.borderColor = '#d1d5db';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = '#f3f4f6';
+                        e.target.style.borderColor = '#e5e7eb';
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="flex w-full items-center justify-between gap-3">
-                <p className="font-medium text-slate-100">{doc.title || 'Untitled'}</p>
-                <div className="flex gap-2">
-                  <Link
-                    to={`/dashboard/${doc.id}`}
-                    className="rounded-lg border border-emerald-400/50 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-200 transition hover:bg-emerald-500/20"
-                  >
-                    Open
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => startRename(doc)}
-                    className="rounded-lg border border-cyan-400/50 bg-cyan-500/10 px-3 py-2 text-sm font-medium text-cyan-200 transition hover:bg-cyan-500/20"
-                  >
-                    Rename
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => deleteDocument(doc.id)}
-                    className="rounded-lg border border-rose-400/40 bg-rose-500/10 px-3 py-2 text-sm font-medium text-rose-200 transition hover:bg-rose-500/20"
-                  >
-                    Delete
-                  </button>
+              ) : (
+                <div style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                  <p style={{ fontWeight: 600, color: '#1f2937', margin: 0 }}>{doc.title || 'Untitled'}</p>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <Link
+                      to={`/dashboard/${doc.id}`}
+                      style={{
+                        borderRadius: '0.5rem',
+                        border: '1px solid #86efac',
+                        backgroundColor: '#f0fdf4',
+                        color: '#15803d',
+                        padding: '0.4rem 0.75rem',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                        transition: 'background-color 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#dcfce7'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#f0fdf4'}
+                    >
+                      Open
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => startRename(doc)}
+                      style={{
+                        borderRadius: '0.5rem',
+                        border: '1px solid #93c5fd',
+                        backgroundColor: '#eff6ff',
+                        color: '#1e40af',
+                        padding: '0.4rem 0.75rem',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'background-color 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#bfdbfe'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#eff6ff'}
+                    >
+                      Rename
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteDocument(doc.id)}
+                      style={{
+                        borderRadius: '0.5rem',
+                        border: '1px solid #fecaca',
+                        backgroundColor: '#fef2f2',
+                        color: '#dc2626',
+                        padding: '0.4rem 0.75rem',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'background-color 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#fee2e2'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#fef2f2'}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+              )}
+            </li>
+          ))}
+        </ul>
 
-      {!documents.length ? (
-        <p className="mt-6 text-sm text-slate-400">No documents yet. Create your first one above.</p>
-      ) : null}
+        {!documents.length && (
+          <p style={{ marginTop: '1.5rem', fontSize: '0.9rem', color: '#9ca3af' }}>No documents yet. Create your first one above.</p>
+        )}
+      </div>
     </main>
   );
 }

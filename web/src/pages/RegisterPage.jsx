@@ -25,45 +25,76 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-6 py-10">
-      <section className="glass w-full max-w-md rounded-3xl p-8 md:p-10">
-        <h1 className="mb-2 text-3xl font-semibold text-white">Create Your Account</h1>
-        <p className="mb-8 text-sm text-slate-300">Get started with your workspace in under a minute.</p>
+    <main className="bn-page">
+      <div className="bn-stage" style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
+        <section style={{ width: '100%', maxWidth: '420px' }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#111827', marginBottom: '0.5rem' }}>Create Your Account</h1>
+          <p style={{ fontSize: '0.95rem', color: '#6b7280', marginBottom: '2rem' }}>Get started with your workspace in under a minute.</p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3 text-slate-100 placeholder-slate-400"
-          />
-          <input
-            type="password"
-            placeholder="Password (min 8, 1 number)"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3 text-slate-100 placeholder-slate-400"
-          />
-          <button
-            type="submit"
-            className="w-full rounded-xl bg-cyan-400 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300"
-          >
-            Register
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem' }}>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{
+                width: '100%',
+                borderRadius: '0.75rem',
+                border: '1px solid #e5e7eb',
+                backgroundColor: '#fff',
+                color: '#1f2937',
+                padding: '0.75rem 1rem',
+                fontSize: '0.95rem',
+              }}
+            />
+            <input
+              type="password"
+              placeholder="Password (min 8, 1 number)"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{
+                width: '100%',
+                borderRadius: '0.75rem',
+                border: '1px solid #e5e7eb',
+                backgroundColor: '#fff',
+                color: '#1f2937',
+                padding: '0.75rem 1rem',
+                fontSize: '0.95rem',
+              }}
+            />
+            <button
+              type="submit"
+              style={{
+                width: '100%',
+                borderRadius: '0.75rem',
+                backgroundColor: '#8b5cf6',
+                color: '#fff',
+                padding: '0.85rem 1rem',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background-color 0.15s ease',
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#7c3aed'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = '#8b5cf6'}
+            >
+              Register
+            </button>
+          </form>
 
-        {error ? <p className="mt-4 rounded-lg border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{error}</p> : null}
+          {error ? <p style={{ marginTop: '1rem', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #fecdd3', backgroundColor: '#fff1f2', color: '#be123c', fontSize: '0.85rem' }}>{error}</p> : null}
 
-        <p className="mt-6 text-sm text-slate-400">
-          Already have an account?{' '}
-          <Link className="text-cyan-200 transition hover:text-cyan-100" to="/login">
-            Login
-          </Link>
-        </p>
-      </section>
+          <p style={{ marginTop: '1.5rem', fontSize: '0.9rem', color: '#6b7280' }}>
+            Already have an account?{' '}
+            <Link to="/login" style={{ color: '#7c3aed', textDecoration: 'none', fontWeight: 600 }}>
+              Login
+            </Link>
+          </p>
+        </section>
+      </div>
     </main>
   );
 }
