@@ -5,7 +5,8 @@ import {
   rename as renameDocument,
   remove as removeDocument,
   enableSharing as enableDocumentSharing,
-  disableSharing as disableDocumentSharing
+  disableSharing as disableDocumentSharing,
+  reorder as reorderDocument
 } from '../service/document.service.js';
 
 async function list(req, res, next) {
@@ -68,4 +69,13 @@ async function disableSharing(req, res, next) {
   }
 }
 
-export { list, create, rename, remove, enableSharing, disableSharing };
+async function reorder(req, res, next) {
+  try {
+    const document = await reorderDocument(req.user.id, req.validated.body);
+    return sendSuccess(res, 200, document);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export { list, create, rename, remove, enableSharing, disableSharing, reorder };

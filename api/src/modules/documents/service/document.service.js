@@ -1,6 +1,7 @@
 import AppError from '../../../common/errors/AppError.js';
 import errorCodes from '../../../common/errors/errorCodes.js';
 import crypto from 'node:crypto';
+import { midpointOrder } from '../../../common/utils/order.util.js';
 import {
   listByUserId,
   create as createDocument,
@@ -8,7 +9,8 @@ import {
   rename as renameDocument,
   remove as removeDocument,
   enableSharing as enableDocumentSharing,
-  disableSharing as disableDocumentSharing
+  disableSharing as disableDocumentSharing,
+  updateOrder as updateDocumentOrder
 } from '../repository/document.repository.js';
 
 async function list(userId) {
@@ -72,11 +74,39 @@ async function disableSharing(userId, documentId) {
   return disableDocumentSharing(documentId);
 }
 
+async function reorder(userId, payload) {
+  const { documentId, previousDocumentId = null, nextDocumentId = null } = payload;
+
+  const document = await findById(documentId);
+  if (!document) {
+    throw new AppError('Document not found', 404, errorCodes.DOCUMENT_NOT_FOUND);
+  }
+
+  if (document.user_id !== userId) {
+    throw new AppError('Forbidden', 403, errorCodes.FORBIDDEN);
+  }
+
+  const prev = previousDocumentId ? await findById(previousDocumentId) : null;
+  const next = nextDocumentId ? await findById(nextDocumentId) : null;
+
+  if (prev && prev.user_id !== userId) {
+    throw new AppError('Invalid reorder bounds', 400, errorCodes.INVALID_REORDER);
+  }
+
+  if (next && next.user_id !== userId) {
+    throw new AppError('Invalid reorder bounds', 400, errorCodes.INVALID_REORDER);
+  }
+
+  const orderIndex = midpointOrder(prev?.order_index ?? null, next?.order_index ?? null);
+  return updateDocumentOrder(documentId, orderIndex);
+}
+
 export {
   list,
   create,
   rename,
   remove,
   enableSharing,
-  disableSharing
+  disableSharing,
+  reorder
 };

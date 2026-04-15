@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS documents (
   title TEXT,
   share_token TEXT,
   is_public BOOLEAN DEFAULT FALSE,
+  order_index FLOAT,
   updated_at TIMESTAMP DEFAULT NOW()
 );
 

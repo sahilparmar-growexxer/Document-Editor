@@ -11,10 +11,6 @@ function validate(schema) {
       query: req.query
     });
 
-    console.log("BODY:", req.body);
-    console.log(result);
-    console.log(result);
-
     if (!result.success) {
       return next(
         new AppError(

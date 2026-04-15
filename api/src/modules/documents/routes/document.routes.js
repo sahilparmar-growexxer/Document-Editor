@@ -5,7 +5,8 @@ import * as controller from '../controller/document.controller.js';
 import {
   createDocumentSchema,
   updateDocumentSchema,
-  idParamSchema
+  idParamSchema,
+  reorderDocumentSchema
 } from '../validation/document.validation.js';
 
 const router = Router();
@@ -13,6 +14,7 @@ const router = Router();
 router.use(authMiddleware);
 router.get('/', controller.list);
 router.post('/', validate(createDocumentSchema), controller.create);
+router.post('/reorder', validate(reorderDocumentSchema), controller.reorder);
 router.post('/:id/share', validate(idParamSchema), controller.enableSharing);
 router.delete('/:id/share', validate(idParamSchema), controller.disableSharing);
 router.patch('/:id', validate(updateDocumentSchema), controller.rename);

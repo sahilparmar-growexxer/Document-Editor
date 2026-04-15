@@ -26,8 +26,19 @@ const idParamSchema = z.object({
   query: z.object({}).optional()
 });
 
+const reorderDocumentSchema = z.object({
+  body: z.object({
+    documentId: z.string().uuid('Invalid document id'),
+    previousDocumentId: z.string().uuid('Invalid previous document id').nullable().optional(),
+    nextDocumentId: z.string().uuid('Invalid next document id').nullable().optional()
+  }),
+  params: z.object({}).optional(),
+  query: z.object({}).optional()
+});
+
 export {
   createDocumentSchema,
   updateDocumentSchema,
-  idParamSchema
+  idParamSchema,
+  reorderDocumentSchema
 };
