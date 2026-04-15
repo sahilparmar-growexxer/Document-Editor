@@ -15,7 +15,7 @@ const allowedOrigins = Array.isArray(env.corsOrigin)
       .filter(Boolean);
 
 const corsOptions = {
-  origin: "*"
+  origin: ["http://localhost:3000" , 'http://127.0.0.1:3000']
 };
 
 app.use(cors(corsOptions));
