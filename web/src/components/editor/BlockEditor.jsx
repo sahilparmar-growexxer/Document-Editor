@@ -37,12 +37,10 @@ export default function BlockEditor({
   const pendingRef = useRef(new Map());
   const revisionRef = useRef(new Map());
   const flushTimerRef = useRef(null);
-  const savedPulseRef = useRef(null);
 
   useEffect(() => {
     return () => {
       if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
-      if (savedPulseRef.current) clearTimeout(savedPulseRef.current);
     };
   }, []);
 
@@ -120,8 +118,6 @@ export default function BlockEditor({
       );
 
       setSaveState('saved');
-      if (savedPulseRef.current) clearTimeout(savedPulseRef.current);
-      savedPulseRef.current = setTimeout(() => setSaveState('idle'), 1200);
     } catch (err) {
       setSaveState('error');
       setError(err.message || 'Autosave failed');
@@ -129,21 +125,93 @@ export default function BlockEditor({
   }
 
   function handleTextChange(blockId, nextText) {
+    const currentBlock = blocks.find((item) => item.id === blockId);
+    const nextContent = {
+      ...(currentBlock?.content || {}),
+      text: nextText
+    };
+
     setBlocks((prev) =>
       prev.map((block) =>
         block.id === blockId
           ? {
               ...block,
-              content: {
-                ...(block.content || {}),
-                text: nextText
-              }
+              content: nextContent
             }
           : block
       )
     );
 
-    queueSave(blockId, { content: { text: nextText } });
+    queueSave(blockId, { content: nextContent });
+  }
+
+  function handleTodoCheckedChange(blockId, checked) {
+    const currentBlock = blocks.find((item) => item.id === blockId);
+    const nextContent = {
+      ...(currentBlock?.content || {}),
+      text: currentBlock?.content?.text || '',
+      checked: Boolean(checked)
+    };
+
+    setBlocks((prev) =>
+      prev.map((block) =>
+        block.id === blockId
+          ? {
+              ...block,
+              content: nextContent
+            }
+          : block
+      )
+    );
+
+    queueSave(blockId, { content: nextContent });
+  }
+
+  function handleImageUrlChange(blockId, nextUrl) {
+    const currentBlock = blocks.find((item) => item.id === blockId);
+    const nextContent = {
+      ...(currentBlock?.content || {}),
+      text: '',
+      url: nextUrl,
+      widthPercent: Number(currentBlock?.content?.widthPercent || 100)
+    };
+
+    setBlocks((prev) =>
+      prev.map((block) =>
+        block.id === blockId
+          ? {
+              ...block,
+              content: nextContent
+            }
+          : block
+      )
+    );
+
+    queueSave(blockId, { content: nextContent });
+  }
+
+  function handleImageWidthChange(blockId, nextWidthPercent) {
+    const normalizedWidth = Math.max(20, Math.min(100, Number(nextWidthPercent) || 100));
+    const currentBlock = blocks.find((item) => item.id === blockId);
+    const nextContent = {
+      ...(currentBlock?.content || {}),
+      text: '',
+      url: currentBlock?.content?.url || '',
+      widthPercent: normalizedWidth
+    };
+
+    setBlocks((prev) =>
+      prev.map((block) =>
+        block.id === blockId
+          ? {
+              ...block,
+              content: nextContent
+            }
+          : block
+      )
+    );
+
+    queueSave(blockId, { content: nextContent });
   }
 
   async function handleSplit(blockId, cursorIndex) {
@@ -190,8 +258,33 @@ export default function BlockEditor({
     }
   }
 
+  async function handleDeleteBlock(blockId) {
+    setError('');
+    const current = blocks;
+    const idx = current.findIndex((item) => item.id === blockId);
+    if (idx < 0) return;
+
+    const previous = idx > 0 ? current[idx - 1] : null;
+    setBlocks((prev) => prev.filter((item) => item.id !== blockId));
+
+    try {
+      await deleteBlock(blockId);
+      if (previous) {
+        setFocusRequest({ id: previous.id, mode: 'end', stamp: Date.now() });
+      }
+    } catch (err) {
+      await loadDocumentBlocks();
+      setError(err.message || 'Could not delete block');
+    }
+  }
+
   async function handleTypeChange(blockId, nextType) {
-    const nextContent = nextType === 'divider' ? { text: '' } : { text: '' };
+    const nextContent =
+      nextType === 'image'
+        ? { text: '', url: '', widthPercent: 100 }
+        : nextType === 'todo'
+          ? { text: '', checked: false }
+          : { text: '' };
 
     setBlocks((prev) =>
       prev.map((block) =>
@@ -285,6 +378,32 @@ export default function BlockEditor({
     }
   }
 
+  async function insertBlockAfter(blockId) {
+    setError('');
+    const current = [...blocks];
+    const idx = current.findIndex((item) => item.id === blockId);
+    if (idx < 0) return;
+
+    const previous = current[idx];
+    const next = idx < current.length - 1 ? current[idx + 1] : null;
+
+    try {
+      const created = await createBlock({
+        documentId: document.id,
+        type: 'paragraph',
+        content: { text: '' },
+        previousBlockId: previous?.id || null,
+        nextBlockId: next?.id || null,
+        parentId: null
+      });
+
+      setBlocks((prev) => normalizeBlocks([...prev, created]));
+      setFocusRequest({ id: created.id, mode: 'start', stamp: Date.now() });
+    } catch (err) {
+      setError(err.message || 'Could not create block');
+    }
+  }
+
   async function handleEnableShare() {
     setError('');
     try {
@@ -354,8 +473,13 @@ export default function BlockEditor({
             isFirst={index === 0}
             onFocus={setActiveBlockId}
             onChange={handleTextChange}
+            onChangeTodoChecked={handleTodoCheckedChange}
+            onChangeImageUrl={handleImageUrlChange}
+            onChangeImageWidth={handleImageWidthChange}
+            onInsertAfter={insertBlockAfter}
             onSplit={handleSplit}
             onDeleteEmpty={handleDeleteEmpty}
+            onDeleteBlock={handleDeleteBlock}
             onChangeType={handleTypeChange}
             onDragStart={setDraggingId}
             onDropReorder={handleDropReorder}

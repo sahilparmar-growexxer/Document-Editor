@@ -1,12 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { jsPDF } from 'jspdf';
+import PptxGenJS from 'pptxgenjs';
+import {
+  Document as DocxDocument,
+  Packer,
+  Paragraph,
+  TextRun,
+  HeadingLevel
+} from 'docx';
 import BlockEditor from '../components/editor/BlockEditor';
 import {
   apiFetch,
-  clearTokens,
+  ensureSession,
+  logoutSession,
+  listBlocks,
   enableDocumentShare,
-  disableDocumentShare,
-  getAccessToken
+  disableDocumentShare
 } from '../lib/apiClient';
 
 export default function DocumentEditorPage() {
@@ -19,6 +29,9 @@ export default function DocumentEditorPage() {
   const [error, setError] = useState('');
   const [collabUrl, setCollabUrl] = useState('');
   const [commandRequest, setCommandRequest] = useState(null);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [exportingFormat, setExportingFormat] = useState('');
+  const [exportError, setExportError] = useState('');
 
   function runEditorCommand(action, value = '') {
     setCommandRequest({ action, value, stamp: Date.now() });
@@ -57,6 +70,36 @@ export default function DocumentEditorPage() {
     }
   }
 
+  async function deleteDocumentById(id) {
+    if (!id) return;
+
+    const confirmed = window.confirm('do you want to delete?');
+    if (!confirmed) return;
+
+    setError('');
+    try {
+      await apiFetch(`/documents/${id}`, { method: 'DELETE' });
+
+      const remaining = documents.filter((item) => item.id !== id);
+      setDocuments(remaining);
+
+      if (id === document?.id) {
+        if (remaining.length > 0) {
+          navigate(`/dashboard/${remaining[0].id}`);
+        } else {
+          const created = await apiFetch('/documents', {
+            method: 'POST',
+            body: JSON.stringify({ title: 'Untitled' })
+          });
+          setDocuments([created]);
+          navigate(`/dashboard/${created.id}`);
+        }
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to delete document');
+    }
+  }
+
   async function loadDocument() {
     setLoading(true);
     setError('');
@@ -82,12 +125,22 @@ export default function DocumentEditorPage() {
   }
 
   useEffect(() => {
-    if (!getAccessToken()) {
-      navigate('/login');
-      return;
-    }
+    let active = true;
 
-    loadDocument();
+    (async () => {
+      const ok = await ensureSession();
+      if (!active) return;
+      if (!ok) {
+        navigate('/login');
+        return;
+      }
+
+      loadDocument();
+    })();
+
+    return () => {
+      active = false;
+    };
   }, [documentId, navigate]);
 
   async function saveTitle() {
@@ -137,9 +190,356 @@ export default function DocumentEditorPage() {
     await navigator.clipboard.writeText(`${window.location.origin}/share/${document.share_token}`);
   }
 
-  function logout() {
-    clearTokens();
+  async function logout() {
+    await logoutSession();
     navigate('/login');
+  }
+
+  function sanitizeFileName(value) {
+    const raw = (value || 'document').trim().toLowerCase();
+    const safe = raw.replace(/[^a-z0-9-_ ]/g, '').replace(/\s+/g, '-').slice(0, 60);
+    return safe || 'document';
+  }
+
+  function sortBlocks(blocks) {
+    return [...blocks].sort((a, b) => {
+      if (a.order_index === b.order_index) {
+        return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+      }
+      return Number(a.order_index || 0) - Number(b.order_index || 0);
+    });
+  }
+
+  function toExportLines(blocks) {
+    return sortBlocks(blocks)
+      .flatMap((block) => {
+        const text = String(block?.content?.text || '').trim();
+        const url = String(block?.content?.url || '').trim();
+        const checked = Boolean(block?.content?.checked);
+
+        if (block.type === 'divider') {
+          return ['------------------------------'];
+        }
+
+        if (block.type === 'image') {
+          return [];
+        }
+
+        if (block.type === 'todo') {
+          return [`${checked ? '[x]' : '[ ]'} ${text || 'Todo item'}`];
+        }
+
+        if (block.type === 'heading' || block.type === 'heading1') {
+          return [`# ${text || 'Untitled section'}`];
+        }
+
+        if (block.type === 'heading2') {
+          return [`## ${text || 'Untitled section'}`];
+        }
+
+        if (block.type === 'heading3') {
+          return [`### ${text || 'Untitled section'}`];
+        }
+
+        if (block.type === 'code') {
+          return ['```', text || '', '```'];
+        }
+
+        return [text || ''];
+      });
+  }
+
+  async function fetchImageDataUrl(url) {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Could not load image');
+    }
+
+    const blob = await response.blob();
+
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Could not convert image'));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  async function getImageSize(dataUrl) {
+    return await new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+      image.onerror = () => reject(new Error('Could not measure image'));
+      image.src = dataUrl;
+    });
+  }
+
+  async function exportAsPdf(blocks, baseName, titleText) {
+    const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const left = 42;
+    const right = 42;
+    const maxWidth = pageWidth - left - right;
+    const maxImageWidth = maxWidth;
+    const maxImageHeight = 360;
+    let y = 48;
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(12);
+
+    if (titleText) {
+      pdf.setFont('helvetica', 'bold');
+      const titleLines = pdf.splitTextToSize(titleText, maxWidth);
+      titleLines.forEach((line) => {
+        if (y > pageHeight - 42) {
+          pdf.addPage();
+          y = 48;
+        }
+        pdf.text(line, left, y);
+        y += 20;
+      });
+      y += 8;
+      pdf.setFont('helvetica', 'normal');
+    }
+
+    const sortedBlocks = sortBlocks(blocks);
+
+    for (const block of sortedBlocks) {
+      const text = String(block?.content?.text || '').trim();
+      const url = String(block?.content?.url || '').trim();
+      const checked = Boolean(block?.content?.checked);
+
+      if (block.type === 'divider') {
+        if (y > pageHeight - 42) {
+          pdf.addPage();
+          y = 48;
+        }
+        pdf.setDrawColor(156, 163, 175);
+        pdf.line(left, y, pageWidth - right, y);
+        y += 16;
+        continue;
+      }
+
+      if (block.type === 'image') {
+        if (!url) continue;
+
+        try {
+          const dataUrl = await fetchImageDataUrl(url);
+          const dimensions = await getImageSize(dataUrl);
+          const ratio = Math.min(maxImageWidth / dimensions.width, maxImageHeight / dimensions.height, 1);
+          const drawWidth = dimensions.width * ratio;
+          const drawHeight = dimensions.height * ratio;
+          const imageType = dataUrl.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+
+          if (y + drawHeight > pageHeight - 42) {
+            pdf.addPage();
+            y = 48;
+          }
+
+          pdf.addImage(dataUrl, imageType, left, y, drawWidth, drawHeight, undefined, 'FAST');
+          y += drawHeight + 12;
+        } catch (_err) {
+          if (y > pageHeight - 42) {
+            pdf.addPage();
+            y = 48;
+          }
+          pdf.setFontSize(10);
+          pdf.setTextColor(107, 114, 128);
+          pdf.text('Image could not be loaded', left, y);
+          pdf.setFontSize(12);
+          pdf.setTextColor(17, 24, 39);
+          y += 18;
+        }
+
+        continue;
+      }
+
+      if (block.type === 'todo') {
+        const todoText = `${checked ? '[x]' : '[ ]'} ${text || 'Todo item'}`;
+        const wrapped = pdf.splitTextToSize(todoText, maxWidth);
+        wrapped.forEach((segment) => {
+          if (y > pageHeight - 42) {
+            pdf.addPage();
+            y = 48;
+          }
+          pdf.text(segment, left, y);
+          y += 18;
+        });
+        y += 4;
+        continue;
+      }
+
+      if (block.type === 'heading' || block.type === 'heading1') {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(16);
+        const wrapped = pdf.splitTextToSize(text || 'Untitled section', maxWidth);
+        wrapped.forEach((segment) => {
+          if (y > pageHeight - 42) {
+            pdf.addPage();
+            y = 48;
+          }
+          pdf.text(segment, left, y);
+          y += 20;
+        });
+        y += 4;
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(12);
+        continue;
+      }
+
+      if (block.type === 'heading2') {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(14);
+        const wrapped = pdf.splitTextToSize(text || 'Untitled section', maxWidth);
+        wrapped.forEach((segment) => {
+          if (y > pageHeight - 42) {
+            pdf.addPage();
+            y = 48;
+          }
+          pdf.text(segment, left, y);
+          y += 18;
+        });
+        y += 4;
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(12);
+        continue;
+      }
+
+      if (block.type === 'heading3') {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(13);
+        const wrapped = pdf.splitTextToSize(text || 'Untitled section', maxWidth);
+        wrapped.forEach((segment) => {
+          if (y > pageHeight - 42) {
+            pdf.addPage();
+            y = 48;
+          }
+          pdf.text(segment, left, y);
+          y += 17;
+        });
+        y += 2;
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(12);
+        continue;
+      }
+
+      if (block.type === 'code') {
+        const codeLines = ['```', text || '', '```'];
+        pdf.setFont('courier', 'normal');
+        codeLines.forEach((line) => {
+          const wrapped = pdf.splitTextToSize(line || ' ', maxWidth);
+          wrapped.forEach((segment) => {
+            if (y > pageHeight - 42) {
+              pdf.addPage();
+              y = 48;
+            }
+            pdf.text(segment, left, y);
+            y += 16;
+          });
+        });
+        y += 6;
+        pdf.setFont('helvetica', 'normal');
+        continue;
+      }
+
+      const wrapped = pdf.splitTextToSize(text || ' ', maxWidth);
+      wrapped.forEach((segment) => {
+        if (y > pageHeight - 42) {
+          pdf.addPage();
+          y = 48;
+        }
+        pdf.text(segment, left, y);
+        y += 18;
+      });
+      y += 4;
+    }
+
+    pdf.save(`${baseName}.pdf`);
+  }
+
+  async function exportAsDocx(lines, titleText, baseName) {
+    const paragraphs = [
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        children: [new TextRun(titleText || 'Untitled')]
+      }),
+      ...lines.map((line) => new Paragraph({ children: [new TextRun(line || ' ')] }))
+    ];
+
+    const doc = new DocxDocument({
+      sections: [
+        {
+          properties: {},
+          children: paragraphs
+        }
+      ]
+    });
+
+    const blob = await Packer.toBlob(doc);
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${baseName}.docx`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function exportAsPptx(lines, titleText, baseName) {
+    const pptx = new PptxGenJS();
+    pptx.layout = 'LAYOUT_WIDE';
+
+    const slide = pptx.addSlide();
+    slide.addText(titleText || 'Untitled', {
+      x: 0.5,
+      y: 0.3,
+      w: 12.2,
+      h: 0.4,
+      bold: true,
+      fontSize: 24,
+      color: '111827'
+    });
+
+    slide.addText(lines.join('\n'), {
+      x: 0.5,
+      y: 1,
+      w: 12.2,
+      h: 5.8,
+      fontSize: 16,
+      color: '374151',
+      valign: 'top'
+    });
+
+    await pptx.writeFile({ fileName: `${baseName}.pptx` });
+  }
+
+  async function handleExport(format) {
+    if (!document?.id) return;
+
+    setExportError('');
+    setExportingFormat(format);
+
+    try {
+      const blocks = await listBlocks(document.id);
+      const exportBlocks = Array.isArray(blocks) ? blocks : [];
+      const lines = toExportLines(exportBlocks);
+      const baseName = sanitizeFileName(title || document.title || 'document');
+      const titleText = (title || document.title || 'Untitled').trim();
+
+      if (format === 'pdf') {
+        await exportAsPdf(exportBlocks, baseName, titleText);
+      } else if (format === 'docx') {
+        await exportAsDocx(lines, titleText, baseName);
+      } else if (format === 'pptx') {
+        await exportAsPptx(lines, titleText, baseName);
+      }
+
+      setIsExportDialogOpen(false);
+    } catch (err) {
+      setExportError(err.message || 'Export failed');
+    } finally {
+      setExportingFormat('');
+    }
   }
 
   if (loading) {
@@ -218,9 +618,14 @@ export default function DocumentEditorPage() {
   }
 
   const orderedDocuments = [...documents].sort((a, b) => {
-    const aTime = new Date(getDocumentTimestamp(a) || 0).getTime();
-    const bTime = new Date(getDocumentTimestamp(b) || 0).getTime();
-    return bTime - aTime;
+    const aOrder = Number(a.order_index || 0);
+    const bOrder = Number(b.order_index || 0);
+    if (aOrder === bOrder) {
+      const aTime = new Date(getDocumentTimestamp(a) || 0).getTime();
+      const bTime = new Date(getDocumentTimestamp(b) || 0).getTime();
+      return bTime - aTime;
+    }
+    return bOrder - aOrder;
   });
 
   return (
@@ -259,7 +664,7 @@ export default function DocumentEditorPage() {
                 {document.is_public ? 'Disable Share' : 'Share'}
               </button>
               <span className="bn-separator" />
-              <button type="button">Export</button>
+              <button type="button" onClick={() => setIsExportDialogOpen(true)}>Export</button>
             </div>
           </div>
 
@@ -274,19 +679,29 @@ export default function DocumentEditorPage() {
               <div className="bn-docs-list">
                 {orderedDocuments.length ? (
                   orderedDocuments.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className={`bn-docs-item${item.id === document.id ? ' is-active' : ''}`}
-                      onClick={() => {
-                        if (item.id !== document.id) {
-                          navigate(`/dashboard/${item.id}`);
-                        }
-                      }}
-                    >
-                      <span className="bn-docs-item-title">{item.title || 'Untitled'}</span>
-                      <span className="bn-docs-item-meta">{getRelativeDayLabel(getDocumentTimestamp(item))}</span>
-                    </button>
+                    <div key={item.id} className={`bn-docs-item-row${item.id === document.id ? ' is-active' : ''}`}>
+                      <button
+                        type="button"
+                        className={`bn-docs-item${item.id === document.id ? ' is-active' : ''}`}
+                        onClick={() => {
+                          if (item.id !== document.id) {
+                            navigate(`/dashboard/${item.id}`);
+                          }
+                        }}
+                      >
+                        <span className="bn-docs-item-title">{item.title || 'Untitled'}</span>
+                        <span className="bn-docs-item-meta">{getRelativeDayLabel(getDocumentTimestamp(item))}</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="bn-docs-delete"
+                        aria-label={`Delete ${item.title || 'Untitled document'}`}
+                        title="Delete document"
+                        onClick={() => deleteDocumentById(item.id)}
+                      >
+                        ×
+                      </button>
+                    </div>
                   ))
                 ) : (
                   <p className="bn-docs-empty">No documents</p>
@@ -318,9 +733,29 @@ export default function DocumentEditorPage() {
 
               <div className="bn-command-list">
                 <button type="button" onClick={() => runEditorCommand('set-type', 'paragraph')}>Paragraph</button>
-                <button type="button" onClick={() => runEditorCommand('set-type', 'heading')}>Heading</button>
+                
+                <div className="bn-command-heading-group">
+                  <label htmlFor="heading-select">Heading</label>
+                  <select
+                    id="heading-select"
+                    className="bn-command-heading-select"
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        runEditorCommand('set-type', e.target.value);
+                        e.target.value = '';
+                      }
+                    }}
+                  >
+                    <option value="">Select level...</option>
+                    <option value="heading1">Heading 1</option>
+                    <option value="heading2">Heading 2</option>
+                    <option value="heading3">Heading 3</option>
+                  </select>
+                </div>
+                
                 <button type="button" onClick={() => runEditorCommand('set-type', 'todo')}>Todo</button>
                 <button type="button" onClick={() => runEditorCommand('set-type', 'code')}>Code Block</button>
+                <button type="button" onClick={() => runEditorCommand('set-type', 'image')}>Image</button>
                 <button type="button" onClick={() => runEditorCommand('set-type', 'divider')}>Divider</button>
                 <button type="button" onClick={() => runEditorCommand('insert')}>+ Add New Block</button>
               </div>
@@ -333,6 +768,146 @@ export default function DocumentEditorPage() {
         </div>
 
         {error ? <p className="bn-banner-error">{error}</p> : null}
+
+        {isExportDialogOpen ? (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(15, 23, 42, 0.45)',
+              display: 'grid',
+              placeItems: 'center',
+              zIndex: 60,
+              padding: '1rem'
+            }}
+            onClick={() => {
+              if (!exportingFormat) {
+                setIsExportDialogOpen(false);
+                setExportError('');
+              }
+            }}
+          >
+            <div
+              style={{
+                width: '100%',
+                maxWidth: '460px',
+                borderRadius: '0.9rem',
+                border: '1px solid #d4d4d8',
+                backgroundColor: '#fff',
+                boxShadow: '0 16px 40px rgba(15, 23, 42, 0.2)',
+                padding: '1rem'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 style={{ margin: 0, fontSize: '1rem', color: '#111827' }}>Export Document</h3>
+              <p style={{ margin: '0.45rem 0 0', fontSize: '0.85rem', color: '#6b7280' }}>
+                Choose the format you want to download.
+              </p>
+
+              <div style={{ display: 'grid', gap: '0.55rem', marginTop: '0.9rem' }}>
+                <button
+                  type="button"
+                  disabled={Boolean(exportingFormat)}
+                  onClick={() => handleExport('pdf')}
+                  style={{
+                    textAlign: 'left',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '0.65rem',
+                    padding: '0.65rem 0.75rem',
+                    background: '#fff',
+                    color: '#1f2937',
+                    fontSize: '0.88rem',
+                    fontWeight: 600,
+                    cursor: exportingFormat ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  PDF (.pdf)
+                </button>
+                <button
+                  type="button"
+                  disabled={Boolean(exportingFormat)}
+                  onClick={() => handleExport('docx')}
+                  style={{
+                    textAlign: 'left',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '0.65rem',
+                    padding: '0.65rem 0.75rem',
+                    background: '#fff',
+                    color: '#1f2937',
+                    fontSize: '0.88rem',
+                    fontWeight: 600,
+                    cursor: exportingFormat ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  DOCX (.docx)
+                </button>
+                <button
+                  type="button"
+                  disabled={Boolean(exportingFormat)}
+                  onClick={() => handleExport('pptx')}
+                  style={{
+                    textAlign: 'left',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '0.65rem',
+                    padding: '0.65rem 0.75rem',
+                    background: '#fff',
+                    color: '#1f2937',
+                    fontSize: '0.88rem',
+                    fontWeight: 600,
+                    cursor: exportingFormat ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  PPTX (.pptx)
+                </button>
+              </div>
+
+              {exportingFormat ? (
+                <p style={{ margin: '0.8rem 0 0', fontSize: '0.82rem', color: '#4b5563' }}>
+                  Preparing {exportingFormat.toUpperCase()} download...
+                </p>
+              ) : null}
+
+              {exportError ? (
+                <p
+                  style={{
+                    margin: '0.75rem 0 0',
+                    padding: '0.5rem 0.6rem',
+                    borderRadius: '0.55rem',
+                    border: '1px solid #fecdd3',
+                    backgroundColor: '#fff1f2',
+                    color: '#be123c',
+                    fontSize: '0.8rem'
+                  }}
+                >
+                  {exportError}
+                </p>
+              ) : null}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.9rem' }}>
+                <button
+                  type="button"
+                  disabled={Boolean(exportingFormat)}
+                  onClick={() => {
+                    setIsExportDialogOpen(false);
+                    setExportError('');
+                  }}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.6rem',
+                    background: '#fff',
+                    color: '#4b5563',
+                    padding: '0.45rem 0.8rem',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    cursor: exportingFormat ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </section>
     </main>
   );

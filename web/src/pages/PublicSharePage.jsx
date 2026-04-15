@@ -4,9 +4,19 @@ import { getSharedDocument } from '../lib/apiClient';
 
 function renderBlock(block) {
   const text = block?.content?.text || '';
+  const imageUrl = block?.content?.url || '';
+  const imageWidthPercent = Math.max(20, Math.min(100, Number(block?.content?.widthPercent || 100)));
 
-  if (block.type === 'heading') {
+  if (block.type === 'heading' || block.type === 'heading1') {
+    return <h1 style={{ fontSize: '1.9rem', fontWeight: 700, color: '#111827', marginBottom: '1rem', marginTop: '1.6rem' }}>{text || 'Untitled section'}</h1>;
+  }
+
+  if (block.type === 'heading2') {
     return <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', marginBottom: '1rem', marginTop: '1.5rem' }}>{text || 'Untitled section'}</h2>;
+  }
+
+  if (block.type === 'heading3') {
+    return <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#111827', marginBottom: '0.8rem', marginTop: '1.1rem' }}>{text || 'Untitled section'}</h3>;
   }
 
   if (block.type === 'code') {
@@ -28,6 +38,8 @@ function renderBlock(block) {
   }
 
   if (block.type === 'todo') {
+    const checked = Boolean(block?.content?.checked);
+
     return (
       <div style={{
         display: 'flex',
@@ -41,14 +53,36 @@ function renderBlock(block) {
         fontSize: '0.95rem',
         color: '#374151',
       }}>
-        <span style={{ color: '#8b5cf6', fontWeight: 600 }}>☐</span>
-        <span>{text}</span>
+        <span style={{ color: '#8b5cf6', fontWeight: 600 }}>{checked ? '☑' : '☐'}</span>
+        <span style={checked ? { textDecoration: 'line-through', opacity: 0.7 } : undefined}>{text}</span>
       </div>
     );
   }
 
   if (block.type === 'divider') {
     return <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '1.5rem 0' }} />;
+  }
+
+  if (block.type === 'image') {
+    if (!imageUrl) {
+      return <p style={{ fontSize: '0.9rem', color: '#9ca3af', marginBottom: '0.75rem' }}>Image URL missing</p>;
+    }
+
+    return (
+      <img
+        src={imageUrl}
+        alt={text || 'Shared document image'}
+        style={{
+          display: 'block',
+          width: `${imageWidthPercent}%`,
+          maxWidth: '100%',
+          borderRadius: '0.65rem',
+          border: '1px solid #e5e7eb',
+          marginBottom: '1rem'
+        }}
+        loading="lazy"
+      />
+    );
   }
 
   return <p style={{ fontSize: '0.95rem', color: '#374151', lineHeight: 1.6, marginBottom: '0.75rem' }}>{text || ' '}</p>;

@@ -28,7 +28,7 @@ export default function LoginPage() {
         method: 'POST',
         body: JSON.stringify({ email, password })
       });
-      setTokens(data.tokens.accessToken, data.tokens.refreshToken);
+      setTokens(data.tokens.accessToken);
 
       const docs = await apiFetch('/documents');
       if (Array.isArray(docs) && docs.length > 0) {

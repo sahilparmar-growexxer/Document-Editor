@@ -77,7 +77,8 @@ input:focus-visible {
 .editor-save-indicator {
   min-height: 1.25rem;
   font-size: 0.85rem;
-  color: #cbd5e1;
+  color: #0f172a;
+  font-weight: 600;
 }
 
 .editor-share-actions {
@@ -170,6 +171,24 @@ input:focus-visible {
   font-weight: 700;
 }
 
+.editor-heading1 {
+  font-size: 1.6rem;
+  line-height: 1.3;
+  font-weight: 800;
+}
+
+.editor-heading2 {
+  font-size: 1.35rem;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.editor-heading3 {
+  font-size: 1.15rem;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
 .editor-code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   background: rgba(15, 23, 42, 0.85);
@@ -179,11 +198,197 @@ input:focus-visible {
   position: relative;
 }
 
+.editor-todo-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.editor-todo-checkbox {
+  margin-top: 0.45rem;
+  width: 1rem;
+  height: 1rem;
+  accent-color: #8b5cf6;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.editor-content.editor-todo {
+  flex: 1;
+}
+
+.editor-content.editor-todo.is-checked {
+  text-decoration: line-through;
+  opacity: 0.65;
+}
+
 .editor-divider {
   width: 100%;
   border: 0;
   border-top: 1px solid rgba(148, 163, 184, 0.28);
   margin: 0.8rem 0;
+}
+
+.editor-image-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.editor-image-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.editor-image-label {
+  display: block;
+  color: #cbd5e1;
+  font-size: 0.76rem;
+  letter-spacing: 0.02em;
+}
+
+.editor-image-delete {
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.35rem;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.editor-block:hover .editor-image-delete,
+.editor-image-delete:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.editor-inline-delete {
+  position: absolute;
+  top: 0.1rem;
+  right: 0.1rem;
+  z-index: 3;
+}
+
+.editor-image-delete:hover {
+  background: rgba(251, 113, 133, 0.2);
+  color: #fecdd3;
+}
+
+.editor-image-delete:active {
+  background: rgba(251, 113, 133, 0.3);
+}
+
+.editor-image-url {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.7);
+  color: #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.48rem 0.65rem;
+  font-size: 0.86rem;
+}
+
+.editor-image-url::placeholder {
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.editor-image-preview-wrap {
+  margin-top: 0.55rem;
+}
+
+.editor-image-resize-box {
+  position: relative;
+  max-width: 100%;
+}
+
+.editor-image-preview {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  max-height: 28rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(2, 6, 23, 0.45);
+  object-fit: contain;
+}
+
+.editor-image-resize-handle {
+  position: absolute;
+  border: 1px solid rgba(56, 189, 248, 0.85);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.95), rgba(34, 211, 238, 0.95));
+  box-shadow: 0 3px 10px rgba(2, 132, 199, 0.35);
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+
+.editor-image-resize-handle:hover {
+  transform: scale(1.06);
+}
+
+.editor-image-preview-wrap:hover .editor-image-resize-handle,
+.editor-image-resize-handle:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.editor-image-resize-handle-right {
+  top: 50%;
+  right: -7px;
+  width: 12px;
+  height: 44px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.editor-image-resize-handle-corner {
+  right: -8px;
+  bottom: -8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 0.35rem;
+  cursor: nwse-resize;
+}
+
+.editor-image-size-badge {
+  position: absolute;
+  left: 0.45rem;
+  bottom: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.8rem;
+  height: 1.35rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  color: #e2e8f0;
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.editor-image-preview-wrap:hover .editor-image-size-badge {
+  opacity: 1;
+}
+
+.editor-image-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
 }
 
 .editor-slash-menu {
@@ -212,6 +417,11 @@ input:focus-visible {
 
 .editor-slash-item:hover {
   background: rgba(34, 211, 238, 0.16);
+}
+
+.editor-slash-item.is-selected {
+  background: rgba(34, 211, 238, 0.2);
+  color: #cffafe;
 }
 
 .editor-slash-empty {
@@ -343,7 +553,10 @@ input:focus-visible {
 .bn-stage {
   width: min(1720px, calc(100vw - 1.2rem));
   margin: 0 auto;
-  padding: 0.6rem 1.3rem 2.2rem;
+  padding: 0.4rem 1.3rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 65px);
 }
 
 .bn-stage h1 {
@@ -398,21 +611,24 @@ input:focus-visible {
 }
 
 .bn-window {
-  margin-top: 0.8rem;
   border: 1px solid #d4d4d8;
   border-radius: 0.9rem;
   background: #fff;
   overflow: hidden;
   box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
-  min-height: 76vh;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .bn-window-head {
   border-bottom: 1px solid #e4e4e7;
-  padding: 0.55rem 0.8rem;
+  padding: 0.4rem 0.6rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .bn-dots {
@@ -455,7 +671,9 @@ input:focus-visible {
 .bn-window-body {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr) 320px;
-  min-height: 76vh;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .bn-docs-sidebar {
@@ -464,30 +682,34 @@ input:focus-visible {
     linear-gradient(180deg, #f5f3ff 0%, #eef2ff 45%, #e0f2fe 100%);
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }
 
 .bn-docs-sidebar-brand {
-  padding: 0.95rem 0.95rem 0.7rem;
+  padding: 0.7rem 0.8rem 0.5rem;
   color: #4c1d95;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.01em;
+  flex-shrink: 0;
 }
 
 .bn-docs-new {
-  margin: 0 0.75rem 0.7rem;
+  margin: 0.4rem 0.65rem 0.6rem;
   border: 1px solid #c4b5fd;
   border-radius: 0.35rem;
   background: #ede9fe;
   color: #5b21b6;
-  padding: 0.36rem 0.55rem;
+  padding: 0.4rem 0.6rem;
   font-size: 0.8rem;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.4rem;
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
 }
 
 .bn-docs-new:hover {
@@ -497,13 +719,24 @@ input:focus-visible {
 
 .bn-docs-sidebar-divider {
   border-top: 1px solid #ddd6fe;
+  margin: 0.25rem 0;
+  flex-shrink: 0;
 }
 
 .bn-docs-list {
-  padding: 0.6rem 0.45rem 0.75rem;
+  padding: 0.5rem 0.5rem 0.6rem;
   display: grid;
   gap: 0.2rem;
-  overflow: auto;
+  overflow-y: auto;
+  /* flex: 1; */
+  min-height: 0;
+}
+
+.bn-docs-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.3rem;
+  max-height: 70px;
 }
 
 .bn-docs-item {
@@ -513,11 +746,14 @@ input:focus-visible {
   background: transparent;
   color: #334155;
   text-align: left;
-  padding: 0.48rem 0.52rem;
+  padding: 0.45rem 0.5rem;
   display: grid;
-  gap: 0.06rem;
+  gap: 0.08rem;
   cursor: pointer;
   transition: border-color 0.15s ease, background-color 0.15s ease;
+  font-size: 0.9rem;
+  align-self: flex-start;
+  height: fit-content;
 }
 
 .bn-docs-item:hover {
@@ -530,8 +766,30 @@ input:focus-visible {
   background: linear-gradient(90deg, rgba(139, 92, 246, 0.2) 0%, rgba(56, 189, 248, 0.18) 100%);
 }
 
+.bn-docs-delete {
+  flex-shrink: 0;
+  align-self: flex-start;
+  border: 1px solid #fecaca;
+  border-radius: 0.25rem;
+  background: #fff1f2;
+  color: #be123c;
+  width: 1.35rem;
+  height: 1.35rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.bn-docs-delete:hover {
+  background: #ffe4e6;
+  border-color: #fda4af;
+}
+
 .bn-docs-item-title {
-  font-size: 0.93rem;
+  font-size: 0.9rem;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -540,7 +798,7 @@ input:focus-visible {
 }
 
 .bn-docs-item-meta {
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   color: #6b7280;
 }
 
@@ -552,20 +810,25 @@ input:focus-visible {
 }
 
 .bn-editor-col {
-  padding: 1.1rem 1.2rem;
+  padding: 0.9rem 1rem;
   border-right: 1px solid #e4e4e7;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .bn-title-input {
   width: 100%;
   border: 0;
   border-bottom: 1px solid #f1f5f9;
-  font-size: clamp(1.8rem, 2.6vw, 2.9rem);
+  font-size: clamp(1.3rem, 2vw, 1.8rem);
   font-weight: 700;
   color: #1f2937;
-  margin-bottom: 0.75rem;
-  padding: 0 0 0.4rem;
+  margin-bottom: 0.35rem;
+  padding: 0 0 0.25rem;
   background: transparent;
+  flex-shrink: 0;
 }
 
 .bn-window .editor-shell {
@@ -580,7 +843,7 @@ input:focus-visible {
 }
 
 .bn-window .editor-save-indicator {
-  color: #9ca3af;
+  color: #0f172a;
 }
 
 .bn-window .editor-error {
@@ -638,6 +901,11 @@ input:focus-visible {
   background: #eff6ff;
 }
 
+.bn-window .editor-slash-item.is-selected {
+  background: #eff6ff;
+  color: #1e40af;
+}
+
 .bn-comments-panel {
   display: flex;
   flex-direction: column;
@@ -651,31 +919,36 @@ input:focus-visible {
   height: 100%;
   background: #f8fafc;
   border-left: 1px solid #e5e7eb;
+  overflow: hidden;
 }
 
 .bn-command-head {
   border-bottom: 1px solid #e5e7eb;
-  padding: 0.9rem 0.95rem;
+  padding: 0.6rem 0.7rem;
 }
 
 .bn-command-head h3 {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #64748b;
 }
 
 .bn-command-head p {
-  margin: 0.3rem 0 0;
-  font-size: 0.76rem;
+  margin: 0.2rem 0 0;
+  font-size: 0.68rem;
   color: #94a3b8;
 }
 
 .bn-command-list {
-  padding: 0.8rem;
+  padding: 0.6rem 0.7rem;
   display: grid;
-  gap: 0.45rem;
+  gap: 0.3rem;
+  align-content: start;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .bn-command-list button {
@@ -683,8 +956,9 @@ input:focus-visible {
   border-radius: 0.55rem;
   background: #fff;
   color: #334155;
-  padding: 0.46rem 0.62rem;
-  font-size: 0.82rem;
+  padding: 0.3rem 0.52rem;
+  min-height: 1.5rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
@@ -697,10 +971,50 @@ input:focus-visible {
   color: #6d28d9;
 }
 
+.bn-command-heading-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.bn-command-heading-group label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.bn-command-heading-select {
+  border: 1px solid #d1d5db;
+  border-radius: 0.55rem;
+  background: #fff;
+  color: #334155;
+  padding: 0.3rem 0.52rem;
+  min-height: 1.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.bn-command-heading-select:hover {
+  border-color: #a78bfa;
+  background: #faf5ff;
+  color: #6d28d9;
+}
+
+.bn-command-heading-select:focus {
+  outline: none;
+  border-color: #a78bfa;
+  background: #faf5ff;
+  box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.15);
+}
+
 .bn-command-note {
-  margin: auto 0.8rem 0.8rem;
-  font-size: 0.76rem;
-  line-height: 1.5;
+  margin: auto 0.7rem 0.7rem;
+  font-size: 0.68rem;
+  line-height: 1.4;
   color: #94a3b8;
 }
 
