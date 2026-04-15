@@ -1,12 +1,16 @@
 import jwt from 'jsonwebtoken';
+import crypto from 'node:crypto';
 import env from '../../config/env.js';
 
 function signAccessToken(payload) {
-  return jwt.sign(payload, env.accessSecret, { expiresIn: env.accessExpiresIn });
+  return jwt.sign({ ...payload, tokenType: 'access' }, env.accessSecret, { expiresIn: env.accessExpiresIn });
 }
 
 function signRefreshToken(payload) {
-  return jwt.sign(payload, env.refreshSecret, { expiresIn: env.refreshExpiresIn });
+  return jwt.sign({ ...payload, tokenType: 'refresh' }, env.refreshSecret, {
+    expiresIn: env.refreshExpiresIn,
+    jwtid: crypto.randomUUID()
+  });
 }
 
 function verifyAccessToken(token) {
@@ -14,7 +18,11 @@ function verifyAccessToken(token) {
 }
 
 function verifyRefreshToken(token) {
-  return jwt.verify(token, env.refreshSecret);
+  const payload = jwt.verify(token, env.refreshSecret);
+  if (payload?.tokenType !== 'refresh') {
+    throw new Error('Invalid refresh token type');
+  }
+  return payload;
 }
 
 export {

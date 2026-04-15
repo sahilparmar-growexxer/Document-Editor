@@ -12,6 +12,9 @@ function authMiddleware(req, _res, next) {
 
   try {
     const payload = verifyAccessToken(token);
+    if (payload?.tokenType !== 'access') {
+      return next(new AppError('Unauthorized', 401, errorCodes.UNAUTHORIZED));
+    }
     req.user = { id: payload.sub, email: payload.email };
     return next();
   } catch (_err) {

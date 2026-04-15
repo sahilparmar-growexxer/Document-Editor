@@ -28,8 +28,14 @@ const env = {
   accessSecret: resolveSecret('JWT_ACCESS_SECRET', 'JWT_SECRET', 'access'),
   refreshSecret: resolveSecret('JWT_REFRESH_SECRET', 'JWT_SECRET', 'refresh'),
   accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
-  refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
-  corsOrigin: process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? 'https://yourdomain.com' : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'])
+  refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
+  refreshTokenCookieName: process.env.REFRESH_TOKEN_COOKIE_NAME || 'refreshToken',
+  refreshTokenHashPepper: process.env.REFRESH_TOKEN_HASH_PEPPER || resolveSecret('JWT_REFRESH_SECRET', 'JWT_SECRET', 'refresh-hash'),
+  corsOrigin:
+    process.env.CORS_ORIGIN ||
+    (process.env.NODE_ENV === 'production'
+      ? 'https://yourdomain.com'
+      : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'])
 };
 
 if (!process.env.JWT_ACCESS_SECRET && !process.env.JWT_REFRESH_SECRET && !process.env.JWT_SECRET) {

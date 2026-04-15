@@ -24,9 +24,13 @@ const loginSchema = z.object({
 });
 
 const refreshSchema = z.object({
-  body: z.object({
-    refreshToken: z.string().min(1, 'refreshToken is required')
-  }),
+  body: z.any().optional(),
+  params: z.object({}).optional(),
+  query: z.object({}).optional()
+});
+
+const logoutSchema = z.object({
+  body: z.any().optional(),
   params: z.object({}).optional(),
   query: z.object({}).optional()
 });
@@ -34,5 +38,6 @@ const refreshSchema = z.object({
 export {
   registerSchema,
   loginSchema,
-  refreshSchema
+  refreshSchema,
+  logoutSchema
 };
