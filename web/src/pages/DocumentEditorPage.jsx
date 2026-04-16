@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import PptxGenJS from 'pptxgenjs';
@@ -32,6 +32,8 @@ export default function DocumentEditorPage() {
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [exportingFormat, setExportingFormat] = useState('');
   const [exportError, setExportError] = useState('');
+  const [copyNotice, setCopyNotice] = useState('');
+  const copyNoticeTimerRef = useRef(null);
 
   function runEditorCommand(action, value = '') {
     setCommandRequest({ action, value, stamp: Date.now() });
@@ -143,6 +145,14 @@ export default function DocumentEditorPage() {
     };
   }, [documentId, navigate]);
 
+  useEffect(() => {
+    return () => {
+      if (copyNoticeTimerRef.current) {
+        clearTimeout(copyNoticeTimerRef.current);
+      }
+    };
+  }, []);
+
   async function saveTitle() {
     if (!document) return;
     const next = title.trim();
@@ -188,6 +198,15 @@ export default function DocumentEditorPage() {
   async function copyCollabUrl() {
     if (!document?.is_public || !document?.share_token) return;
     await navigator.clipboard.writeText(`${window.location.origin}/share/${document.share_token}`);
+
+    setCopyNotice('Copied');
+    if (copyNoticeTimerRef.current) {
+      clearTimeout(copyNoticeTimerRef.current);
+    }
+
+    copyNoticeTimerRef.current = setTimeout(() => {
+      setCopyNotice('');
+    }, 3000);
   }
 
   async function logout() {
@@ -648,7 +667,7 @@ export default function DocumentEditorPage() {
           <p>Share this URL:</p>
           <input readOnly value={collabUrl} />
           <button type="button" onClick={copyCollabUrl} disabled={!document.is_public}>
-            Copy Link
+            {copyNotice || 'Copy Link'}
           </button>
           {document.is_public && document.share_token_expires_at && (
             <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>

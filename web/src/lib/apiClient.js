@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = "http://localhost:4000/" || import.meta.env.VITE_API_URL || 'https://document-editor-1-nj6y.onrender.com/';
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:4000/' : 'https://document-editor-1-nj6y.onrender.com/');
 const BASE_URL = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
 
 let accessToken = '';
@@ -224,28 +226,4 @@ export async function reorderDocument(payload) {
 
 export async function getSharedDocument(token) {
   return publicApiFetch(`/share/${token}`);
-}
-
-export async function listDocumentComments(documentId) {
-  return apiFetch(`/documents/${documentId}/comments`);
-}
-
-export async function createDocumentComment(documentId, body) {
-  return apiFetch(`/documents/${documentId}/comments`, {
-    method: 'POST',
-    body: JSON.stringify({ body }),
-    headers: { 'Content-Type': 'application/json' }
-  });
-}
-
-export async function updateCommentResolved(commentId, resolved) {
-  return apiFetch(`/comments/${commentId}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ resolved }),
-    headers: { 'Content-Type': 'application/json' }
-  });
-}
-
-export async function deleteComment(commentId) {
-  return apiFetch(`/comments/${commentId}`, { method: 'DELETE' });
 }

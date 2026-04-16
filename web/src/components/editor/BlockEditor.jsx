@@ -38,10 +38,14 @@ export default function BlockEditor({
   const pendingRef = useRef(new Map());
   const revisionRef = useRef(new Map());
   const flushTimerRef = useRef(null);
+  const lastAppliedCommandStampRef = useRef(0);
+  const [copyNotice, setCopyNotice] = useState('');
+  const copyNoticeTimerRef = useRef(null);
 
   useEffect(() => {
     return () => {
       if (flushTimerRef.current) clearTimeout(flushTimerRef.current);
+      if (copyNoticeTimerRef.current) clearTimeout(copyNoticeTimerRef.current);
     };
   }, []);
 
@@ -76,19 +80,22 @@ export default function BlockEditor({
 
   useEffect(() => {
     if (!commandRequest || !blocks.length) return;
+    if (lastAppliedCommandStampRef.current === commandRequest.stamp) return;
 
     const targetId = activeBlockId || blocks[blocks.length - 1]?.id;
     if (!targetId) return;
 
     if (commandRequest.action === 'insert') {
+      lastAppliedCommandStampRef.current = commandRequest.stamp;
       insertBlockAtEnd();
       return;
     }
 
     if (commandRequest.action === 'set-type' && commandRequest.value) {
+      lastAppliedCommandStampRef.current = commandRequest.stamp;
       handleTypeChange(targetId, commandRequest.value);
     }
-  }, [commandRequest?.stamp]);
+  }, [commandRequest?.stamp, blocks.length, activeBlockId]);
 
   function queueSave(blockId, payload) {
     const nextRevision = (revisionRef.current.get(blockId) || 0) + 1;
@@ -230,17 +237,23 @@ export default function BlockEditor({
         cursorIndex
       });
 
+      const normalizedNewBlock = {
+        ...newBlock,
+        type: 'paragraph',
+        content: { text: String(newBlock?.content?.text || '') }
+      };
+
       setBlocks((prev) => {
         const idx = prev.findIndex((item) => item.id === blockId);
         if (idx < 0) return prev;
 
         const next = [...prev];
         next[idx] = updatedBlock;
-        next.splice(idx + 1, 0, newBlock);
+        next.splice(idx + 1, 0, normalizedNewBlock);
         return normalizeBlocks(next);
       });
 
-      setFocusRequest({ id: newBlock.id, mode: 'start', stamp: Date.now() });
+      setFocusRequest({ id: normalizedNewBlock.id, mode: 'start', stamp: Date.now() });
     } catch (err) {
       setError(err.message || 'Could not split block');
     }
@@ -488,6 +501,15 @@ export default function BlockEditor({
     if (!document.share_token) return;
     const link = `${window.location.origin}/share/${document.share_token}`;
     await navigator.clipboard.writeText(link);
+
+    setCopyNotice('Copied');
+    if (copyNoticeTimerRef.current) {
+      clearTimeout(copyNoticeTimerRef.current);
+    }
+
+    copyNoticeTimerRef.current = setTimeout(() => {
+      setCopyNotice('');
+    }, 3000);
   }
 
   if (loading) {
@@ -511,7 +533,7 @@ export default function BlockEditor({
             {document.is_public ? (
               <>
                 <button type="button" className="editor-btn" onClick={copyShareLink}>
-                  Copy Share Link
+                  {copyNotice || 'Copy Share Link'}
                 </button>
                 <button type="button" className="editor-btn editor-btn-danger" onClick={handleDisableShare}>
                   Disable Share

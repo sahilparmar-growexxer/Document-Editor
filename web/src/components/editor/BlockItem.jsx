@@ -312,12 +312,14 @@ export default function BlockItem({
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
+        if (!menuOptions.length) return;
         setMenuSelectedIndex((prev) => (prev + 1) % menuOptions.length);
         return;
       }
 
       if (e.key === 'ArrowUp') {
         e.preventDefault();
+        if (!menuOptions.length) return;
         setMenuSelectedIndex((prev) => (prev - 1 + menuOptions.length) % menuOptions.length);
         return;
       }
@@ -474,12 +476,14 @@ export default function BlockItem({
 
                     if (e.key === 'ArrowDown') {
                       e.preventDefault();
+                      if (!menuOptions.length) return;
                       setMenuSelectedIndex((prev) => (prev + 1) % menuOptions.length);
                       return;
                     }
 
                     if (e.key === 'ArrowUp') {
                       e.preventDefault();
+                      if (!menuOptions.length) return;
                       setMenuSelectedIndex((prev) => (prev - 1 + menuOptions.length) % menuOptions.length);
                       return;
                     }

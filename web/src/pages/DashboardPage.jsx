@@ -88,7 +88,7 @@ export default function DashboardPage() {
     setError('');
 
     try {
-      await apiFetch('/documents', {
+      const created = await apiFetch('/documents', {
         method: 'POST',
         body: JSON.stringify({ title }),
         headers: {
@@ -96,7 +96,11 @@ export default function DashboardPage() {
           'Accept': 'application/json'        // Optional: tell server you expect JSON back
         },
       });
-      setTitle('Untitled Document');
+      setTitle('');
+      if (created?.id) {
+        navigate(`/dashboard/${created.id}`);
+        return;
+      }
       await loadDocuments();
     } catch (err) {
       setError(err.message);
