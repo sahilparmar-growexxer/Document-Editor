@@ -12,7 +12,7 @@ app.set('trust proxy', 1);
 
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://document-editor-qx2l.vercel.app/"
+  "https://document-editor-qx2l.vercel.app"
 ];
 
 app.use(cors({
