@@ -31,16 +31,34 @@ const env = {
   refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
   refreshTokenCookieName: process.env.REFRESH_TOKEN_COOKIE_NAME || 'refreshToken',
   refreshTokenHashPepper: process.env.REFRESH_TOKEN_HASH_PEPPER || resolveSecret('JWT_REFRESH_SECRET', 'JWT_SECRET', 'refresh-hash'),
-  corsOrigin:
-    process.env.CORS_ORIGIN ||
-    (process.env.NODE_ENV === 'production'
-      ? 'https://yourdomain.com'
-      : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'])
+  authRateLimitWindowMs: Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
+  authRateLimitMax: Number(process.env.AUTH_RATE_LIMIT_MAX || 100),
+  corsOrigin: process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? undefined : [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:5173',
+    'http://localhost:4173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:4173'
+  ])
 };
 
-if (!process.env.JWT_ACCESS_SECRET && !process.env.JWT_REFRESH_SECRET && !process.env.JWT_SECRET) {
-  const secretSource = process.env.JWT_SECRET ? 'JWT_SECRET' : 'derived fallback';
-  console.warn(`JWT secrets are not fully configured. Using ${secretSource} values for token signing.`);
+const hasExplicitJwtSecrets = Boolean(
+  process.env.JWT_ACCESS_SECRET || process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET
+);
+
+if (env.nodeEnv === 'production' && !hasExplicitJwtSecrets) {
+  throw new Error('JWT secrets are not configured. Set JWT_ACCESS_SECRET/JWT_REFRESH_SECRET (or JWT_SECRET) in production.');
+}
+
+if (env.nodeEnv === 'production' && !env.corsOrigin) {
+  throw new Error('CORS_ORIGIN is not configured. Set CORS_ORIGIN in production.');
+}
+
+if (env.nodeEnv !== 'production' && !hasExplicitJwtSecrets) {
+  console.warn('JWT secrets are not fully configured. Using derived fallback values for local development only.');
 }
 
 export default env;

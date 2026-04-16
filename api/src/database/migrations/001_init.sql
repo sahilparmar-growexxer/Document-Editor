@@ -12,6 +12,7 @@ CREATE TABLE documents (
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   title TEXT,
   share_token TEXT,
+  share_token_expires_at TIMESTAMP,
   is_public BOOLEAN DEFAULT FALSE,
   updated_at TIMESTAMP DEFAULT NOW()
 );

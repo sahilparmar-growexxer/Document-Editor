@@ -2,7 +2,7 @@ import { query } from '../../../config/db.js';
 
 async function listByUserId(userId) {
   const result = await query(
-    `SELECT id, user_id, title, share_token, is_public, order_index, updated_at
+    `SELECT id, user_id, title, share_token, share_token_expires_at, is_public, order_index, updated_at
      FROM documents
      WHERE user_id = $1
      ORDER BY order_index DESC, updated_at DESC`,
@@ -24,7 +24,7 @@ async function create(userId, title) {
   const result = await query(
     `INSERT INTO documents (user_id, title, order_index, updated_at)
      VALUES ($1, $2, $3, NOW())
-     RETURNING id, user_id, title, share_token, is_public, order_index, updated_at`,
+     RETURNING id, user_id, title, share_token, share_token_expires_at, is_public, order_index, updated_at`,
     [userId, title, orderIndex]
   );
   return result.rows[0];
@@ -32,7 +32,7 @@ async function create(userId, title) {
 
 async function findById(id) {
   const result = await query(
-    `SELECT id, user_id, title, share_token, is_public, order_index, updated_at
+    `SELECT id, user_id, title, share_token, share_token_expires_at, is_public, order_index, updated_at
      FROM documents
      WHERE id = $1
      LIMIT 1`,
@@ -46,7 +46,7 @@ async function rename(id, title) {
     `UPDATE documents
      SET title = $2, updated_at = NOW()
      WHERE id = $1
-     RETURNING id, user_id, title, share_token, is_public, order_index, updated_at`,
+     RETURNING id, user_id, title, share_token, share_token_expires_at, is_public, order_index, updated_at`,
     [id, title]
   );
   return result.rows[0] || null;
@@ -61,7 +61,7 @@ async function enableSharing(id, token, expiresAt) {
     `UPDATE documents
      SET share_token = $2, is_public = TRUE, share_token_expires_at = $3, updated_at = NOW()
      WHERE id = $1
-     RETURNING id, user_id, title, share_token, is_public, order_index, updated_at`,
+     RETURNING id, user_id, title, share_token, share_token_expires_at, is_public, order_index, updated_at`,
     [id, token, expiresAt]
   );
 
@@ -71,9 +71,9 @@ async function enableSharing(id, token, expiresAt) {
 async function disableSharing(id) {
   const result = await query(
     `UPDATE documents
-     SET share_token = NULL, is_public = FALSE, updated_at = NOW()
+     SET share_token = NULL, share_token_expires_at = NULL, is_public = FALSE, updated_at = NOW()
      WHERE id = $1
-     RETURNING id, user_id, title, share_token, is_public, order_index, updated_at`,
+     RETURNING id, user_id, title, share_token, share_token_expires_at, is_public, order_index, updated_at`,
     [id]
   );
 
@@ -85,7 +85,7 @@ async function updateOrder(id, orderIndex) {
     `UPDATE documents
      SET order_index = $2, updated_at = NOW()
      WHERE id = $1
-     RETURNING id, user_id, title, share_token, is_public, order_index, updated_at`,
+     RETURNING id, user_id, title, share_token, share_token_expires_at, is_public, order_index, updated_at`,
     [id, orderIndex]
   );
 

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import app from './app.js';
 import env from './config/env.js';
-import { getClient, query } from './config/db.js';
+import { getClient, query, pool } from './config/db.js';
 import logger from './config/logger.js';
 import dotenv from 'dotenv'
 
@@ -51,9 +51,25 @@ async function migrate() {
 async function start() {
   await migrate();
   await query('SELECT 1');
-  app.listen(env.port, () => {
+  const server = app.listen(env.port, () => {
     logger.info(`API listening on http://localhost:${env.port}`);
   });
+
+  const shutdown = async (signal) => {
+    logger.info(`Received ${signal}, shutting down gracefully`);
+    server.close(async () => {
+      try {
+        await pool.end();
+        process.exit(0);
+      } catch (error) {
+        logger.error('Failed during shutdown', error);
+        process.exit(1);
+      }
+    });
+  };
+
+  process.once('SIGINT', () => shutdown('SIGINT'));
+  process.once('SIGTERM', () => shutdown('SIGTERM'));
 }
 
 start().catch((error) => {

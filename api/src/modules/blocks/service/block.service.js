@@ -166,8 +166,8 @@ async function splitBlock(userId, payload) {
 
   const newBlock = await create({
     documentId,
-    type: block.type || 'paragraph',
-    content: { ...normalizedContent, text: after },
+    type: 'paragraph',
+    content: { text: after },
     orderIndex,
     parentId: block.parent_id
   });
