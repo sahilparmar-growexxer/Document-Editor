@@ -19,8 +19,7 @@ const allowedOrigins = Array.isArray(env.corsOrigin)
 
 const corsOptions = {
   origin: [
-    "http://localhost:3000",
-    "https://document-editor-ebnl.vercel.app"
+    "*"
   ],
   credentials: true
 };
