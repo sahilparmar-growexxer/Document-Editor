@@ -18,18 +18,10 @@ const allowedOrigins = Array.isArray(env.corsOrigin)
       .filter(Boolean);
 
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow non-browser clients and same-origin requests with no Origin header.
-    if (!origin) {
-      return callback(null, true);
-    }
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    return callback(new Error('Not allowed by CORS'));
-  },
+  origin: [
+    "http://localhost:3000",
+    "https://document-editor-ebnl.vercel.app"
+  ],
   credentials: true
 };
 
