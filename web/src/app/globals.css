@@ -60,10 +60,11 @@ input:focus-visible {
 }
 
 .editor-shell {
+  position: relative;
   border: 1px solid rgba(148, 163, 184, 0.25);
   border-radius: 1.1rem;
   background: linear-gradient(165deg, rgba(15, 23, 42, 0.7), rgba(2, 6, 23, 0.75));
-  padding: 1rem;
+  padding: 1rem 1rem 5.4rem;
 }
 
 .editor-toolbar {
@@ -130,6 +131,11 @@ input:focus-visible {
   background: rgba(148, 163, 184, 0.07);
 }
 
+.editor-block.is-selected-block {
+  background: rgba(34, 211, 238, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.35);
+}
+
 .editor-drag-handle {
   width: 1.35rem;
   min-width: 1.35rem;
@@ -139,6 +145,16 @@ input:focus-visible {
   color: #94a3b8;
   cursor: grab;
   margin-top: 0.3rem;
+}
+
+.editor-select-checkbox {
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: 0.45rem;
+  accent-color: #22d3ee;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.3;
 }
 
 .editor-content-wrap {
@@ -440,6 +456,55 @@ input:focus-visible {
   padding: 0.45rem 0.8rem;
 }
 
+.editor-floating-actions {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 1px solid #cbd5e1;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  border-radius: 999px;
+  padding: 0.45rem 0.55rem;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+  backdrop-filter: blur(8px);
+}
+
+.editor-floating-count {
+  color: #0f172a;
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-width: 5.9rem;
+  text-align: center;
+}
+
+.editor-floating-btn {
+  border: 1px solid #7dd3fc;
+  background: #e0f2fe;
+  color: #0c4a6e;
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.editor-floating-btn-danger {
+  border-color: #fda4af;
+  background: #fff1f2;
+  color: #9f1239;
+}
+
+.editor-floating-btn:disabled {
+  opacity: 0.65;
+  color: #64748b;
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+  cursor: not-allowed;
+}
+
 .share-heading {
   color: #f8fafc;
   margin: 0.1rem 0 0.4rem;
@@ -485,6 +550,18 @@ input:focus-visible {
     width: 100%;
     justify-content: flex-start;
     flex-wrap: wrap;
+  }
+
+  .editor-floating-actions {
+    width: calc(100vw - 1.2rem);
+    max-width: 28rem;
+    justify-content: space-between;
+    border-radius: 0.8rem;
+  }
+
+  .editor-floating-count {
+    min-width: auto;
+    text-align: left;
   }
 }
 
@@ -563,7 +640,7 @@ input:focus-visible {
   text-align: center;
   font-size: clamp(2rem, 4vw, 3.2rem);
   color: #111827;
-  margin: 0.8rem 0 1.25rem;
+  /* margin: 0.8rem 0 1.25rem; */
 }
 
 .bn-stage h1 span {

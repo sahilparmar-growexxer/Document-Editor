@@ -27,6 +27,7 @@ export default function BlockEditor({
   commandRequest = null
 }) {
   const [blocks, setBlocks] = useState([]);
+  const [selectedBlockIds, setSelectedBlockIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [saveState, setSaveState] = useState('saved');
@@ -67,6 +68,11 @@ export default function BlockEditor({
     if (!document?.id) return;
     loadDocumentBlocks();
   }, [document?.id]);
+
+  useEffect(() => {
+    const existingIds = new Set(blocks.map((block) => block.id));
+    setSelectedBlockIds((prev) => prev.filter((id) => existingIds.has(id)));
+  }, [blocks]);
 
   useEffect(() => {
     if (!commandRequest || !blocks.length) return;
@@ -266,6 +272,7 @@ export default function BlockEditor({
 
     const previous = idx > 0 ? current[idx - 1] : null;
     setBlocks((prev) => prev.filter((item) => item.id !== blockId));
+    setSelectedBlockIds((prev) => prev.filter((id) => id !== blockId));
 
     try {
       await deleteBlock(blockId);
@@ -275,6 +282,59 @@ export default function BlockEditor({
     } catch (err) {
       await loadDocumentBlocks();
       setError(err.message || 'Could not delete block');
+    }
+  }
+
+  function handleToggleBlockSelect(blockId, checked) {
+    setSelectedBlockIds((prev) => {
+      if (checked) {
+        if (prev.includes(blockId)) return prev;
+        return [...prev, blockId];
+      }
+
+      return prev.filter((id) => id !== blockId);
+    });
+  }
+
+  function handleSelectAllToggle() {
+    if (!blocks.length) return;
+
+    setSelectedBlockIds((prev) => {
+      if (prev.length === blocks.length) {
+        return [];
+      }
+
+      return blocks.map((block) => block.id);
+    });
+  }
+
+  async function handleDeleteSelected() {
+    if (!selectedBlockIds.length) return;
+
+    setError('');
+    await flushPending();
+
+    const idsToDelete = blocks
+      .filter((block) => selectedBlockIds.includes(block.id))
+      .map((block) => block.id);
+
+    if (!idsToDelete.length) return;
+
+    setBlocks((prev) => prev.filter((block) => !idsToDelete.includes(block.id)));
+    setSelectedBlockIds([]);
+
+    try {
+      await Promise.all(idsToDelete.map((id) => deleteBlock(id)));
+
+      const remaining = blocks.filter((block) => !idsToDelete.includes(block.id));
+      if (!remaining.length) {
+        const first = await createBlock({ documentId: document.id, type: 'paragraph', content: { text: '' } });
+        setBlocks([first]);
+        setFocusRequest({ id: first.id, mode: 'end', stamp: Date.now() });
+      }
+    } catch (err) {
+      await loadDocumentBlocks();
+      setError(err.message || 'Could not delete selected blocks');
     }
   }
 
@@ -434,6 +494,9 @@ export default function BlockEditor({
     return <p className="text-sm text-slate-300">Loading editor...</p>;
   }
 
+  const isAllSelected = blocks.length > 0 && selectedBlockIds.length === blocks.length;
+  const selectedCount = selectedBlockIds.length;
+
   return (
     <section className="editor-shell">
       <div className="editor-toolbar">
@@ -471,6 +534,8 @@ export default function BlockEditor({
             key={block.id}
             block={block}
             isFirst={index === 0}
+            isSelected={selectedBlockIds.includes(block.id)}
+            onToggleSelect={handleToggleBlockSelect}
             onFocus={setActiveBlockId}
             onChange={handleTextChange}
             onChangeTodoChecked={handleTodoCheckedChange}
@@ -489,6 +554,21 @@ export default function BlockEditor({
 
         <button type="button" className="editor-add-block" onClick={insertBlockAtEnd}>
           + Add block
+        </button>
+      </div>
+
+      <div className="editor-floating-actions" role="region" aria-label="Block selection actions">
+        <span className="editor-floating-count">{selectedCount} selected</span>
+        <button type="button" className="editor-floating-btn" onClick={handleSelectAllToggle}>
+          {isAllSelected ? 'Clear All' : 'Select All'}
+        </button>
+        <button
+          type="button"
+          className="editor-floating-btn editor-floating-btn-danger"
+          onClick={handleDeleteSelected}
+          disabled={!selectedCount}
+        >
+          Delete
         </button>
       </div>
     </section>

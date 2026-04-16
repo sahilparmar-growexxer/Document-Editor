@@ -90,6 +90,8 @@ function isHeadingType(type) {
 export default function BlockItem({
   block,
   isFirst,
+  isSelected,
+  onToggleSelect,
   onFocus,
   onChange,
   onChangeTodoChecked,
@@ -224,6 +226,16 @@ export default function BlockItem({
 
   function handleInput(e) {
     const nextText = e.currentTarget.textContent || '';
+    const withoutGhostChars = nextText.replace(/[\u200B\n\r]/g, '');
+
+    // Some browsers keep a hidden newline/zero-width node in empty contentEditable fields.
+    // Clearing it restores :empty so the placeholder is visible again.
+    if (!withoutGhostChars.length && nextText.length > 0) {
+      e.currentTarget.textContent = '';
+      onChange(block.id, '');
+      return;
+    }
+
     onChange(block.id, nextText);
   }
 
@@ -286,6 +298,7 @@ export default function BlockItem({
 
     const cursor = getCaretOffset(element);
     const currentText = element.textContent || '';
+    const normalizedText = currentText.replace(/\u200B/g, '').trim();
 
     if (menuOpen) {
       if (e.key === 'Escape') {
@@ -332,7 +345,7 @@ export default function BlockItem({
       return;
     }
 
-    if (e.key === '/' && cursor === 0 && currentText.length === 0) {
+    if (e.key === '/' && cursor === 0 && normalizedText.length === 0) {
       e.preventDefault();
       setMenuOpen(true);
       setSlashQuery('');
@@ -346,7 +359,7 @@ export default function BlockItem({
     }
 
     if (e.key === 'Backspace' && cursor === 0) {
-      if (currentText.length === 0 && !isFirst) {
+      if (normalizedText.length === 0 && !isFirst) {
         e.preventDefault();
         onDeleteEmpty(block.id);
       }
@@ -356,13 +369,20 @@ export default function BlockItem({
   if (block.type === 'divider') {
     return (
       <div
-        className="editor-block group"
+        className={`editor-block group${isSelected ? ' is-selected-block' : ''}`}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
           onDropReorder(block.id, 'before');
         }}
       >
+        <input
+          type="checkbox"
+          className="editor-select-checkbox"
+          checked={Boolean(isSelected)}
+          onChange={(e) => onToggleSelect(block.id, e.target.checked)}
+          aria-label="Select block"
+        />
         <button
           type="button"
           draggable
@@ -391,7 +411,7 @@ export default function BlockItem({
   if (block.type === 'image') {
     return (
       <div
-        className="editor-block group"
+        className={`editor-block group${isSelected ? ' is-selected-block' : ''}`}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
@@ -400,6 +420,13 @@ export default function BlockItem({
           onDropReorder(block.id, placement);
         }}
       >
+        <input
+          type="checkbox"
+          className="editor-select-checkbox"
+          checked={Boolean(isSelected)}
+          onChange={(e) => onToggleSelect(block.id, e.target.checked)}
+          aria-label="Select block"
+        />
         <button
           type="button"
           draggable
@@ -437,6 +464,61 @@ export default function BlockItem({
                 placeholder="https://example.com/photo.jpg"
                 onFocus={() => onFocus(block.id)}
                 onKeyDown={(e) => {
+                  if (menuOpen) {
+                    if (e.key === 'Escape') {
+                      e.preventDefault();
+                      setMenuOpen(false);
+                      setSlashQuery('');
+                      return;
+                    }
+
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      setMenuSelectedIndex((prev) => (prev + 1) % menuOptions.length);
+                      return;
+                    }
+
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      setMenuSelectedIndex((prev) => (prev - 1 + menuOptions.length) % menuOptions.length);
+                      return;
+                    }
+
+                    if (e.key === 'Backspace') {
+                      e.preventDefault();
+                      setSlashQuery((prev) => prev.slice(0, -1));
+                      return;
+                    }
+
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (menuOptions[menuSelectedIndex]) {
+                        handleTypeSelect(menuOptions[menuSelectedIndex].value);
+                      }
+                      return;
+                    }
+
+                    if (e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey) {
+                      e.preventDefault();
+                      setSlashQuery((prev) => prev + e.key);
+                      return;
+                    }
+
+                    return;
+                  }
+
+                  if (
+                    e.key === '/' &&
+                    !imageUrl.trim() &&
+                    e.currentTarget.selectionStart === 0 &&
+                    e.currentTarget.selectionEnd === 0
+                  ) {
+                    e.preventDefault();
+                    setMenuOpen(true);
+                    setSlashQuery('');
+                    return;
+                  }
+
                   if (
                     e.key === 'Enter' &&
                     e.currentTarget.selectionStart === imageUrl.length &&
@@ -461,6 +543,29 @@ export default function BlockItem({
                 onBlur={handleImageUrlInputBlur}
                 onChange={(e) => onChangeImageUrl(block.id, e.target.value)}
               />
+
+              {menuOpen ? (
+                <div ref={menuContainerRef} className="editor-slash-menu">
+                  {menuOptions.length ? (
+                    menuOptions.map((option, index) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`editor-slash-item ${index === menuSelectedIndex ? 'is-selected' : ''}`}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleTypeSelect(option.value);
+                        }}
+                        onMouseEnter={() => setMenuSelectedIndex(index)}
+                      >
+                        {option.label}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="editor-slash-empty">No matching block type</div>
+                  )}
+                </div>
+              ) : null}
             </>
           ) : null}
 
@@ -523,7 +628,7 @@ export default function BlockItem({
 
     return (
       <div
-        className="editor-block group"
+        className={`editor-block group${isSelected ? ' is-selected-block' : ''}`}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
@@ -532,6 +637,13 @@ export default function BlockItem({
           onDropReorder(block.id, placement);
         }}
       >
+        <input
+          type="checkbox"
+          className="editor-select-checkbox"
+          checked={Boolean(isSelected)}
+          onChange={(e) => onToggleSelect(block.id, e.target.checked)}
+          aria-label="Select block"
+        />
         <button
           type="button"
           draggable
@@ -606,7 +718,7 @@ export default function BlockItem({
 
   return (
     <div
-      className="editor-block group"
+      className={`editor-block group${isSelected ? ' is-selected-block' : ''}`}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault();
@@ -615,6 +727,13 @@ export default function BlockItem({
         onDropReorder(block.id, placement);
       }}
     >
+      <input
+        type="checkbox"
+        className="editor-select-checkbox"
+        checked={Boolean(isSelected)}
+        onChange={(e) => onToggleSelect(block.id, e.target.checked)}
+        aria-label="Select block"
+      />
       <button
         type="button"
         draggable

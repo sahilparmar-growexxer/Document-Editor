@@ -645,7 +645,7 @@ export default function DocumentEditorPage() {
         </h1>
 
         <div className="bn-collab-bar">
-          <p>Collaborate live! Share this URL:</p>
+          <p>Share this URL:</p>
           <input readOnly value={collabUrl} />
           <button type="button" onClick={copyCollabUrl} disabled={!document.is_public}>
             Copy Link
