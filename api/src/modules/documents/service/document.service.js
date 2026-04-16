@@ -58,7 +58,9 @@ async function enableSharing(userId, documentId) {
   }
 
   const token = crypto.randomUUID();
-  return enableDocumentSharing(documentId, token);
+  // Set token expiry to 24 hours from now
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  return enableDocumentSharing(documentId, token, expiresAt);
 }
 
 async function disableSharing(userId, documentId) {

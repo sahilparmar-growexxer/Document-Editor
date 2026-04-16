@@ -650,6 +650,11 @@ export default function DocumentEditorPage() {
           <button type="button" onClick={copyCollabUrl} disabled={!document.is_public}>
             Copy Link
           </button>
+          {document.is_public && document.share_token_expires_at && (
+            <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>
+              Expires: {new Date(document.share_token_expires_at).toLocaleString()}
+            </p>
+          )}
         </div>
 
         <div className="bn-window">

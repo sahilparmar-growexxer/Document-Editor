@@ -116,7 +116,7 @@ async function findNextBlock(documentId, orderIndex) {
 
 async function listPublicByShareToken(token) {
   const result = await query(
-    `SELECT d.id, d.title, d.share_token, d.is_public,
+    `SELECT d.id, d.title, d.share_token, d.is_public, d.share_token_expires_at,
             b.id AS block_id, b.type AS block_type, b.content AS block_content,
             b.order_index AS block_order_index, b.parent_id AS block_parent_id, b.created_at AS block_created_at
      FROM documents d

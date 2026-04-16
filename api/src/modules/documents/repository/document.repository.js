@@ -56,13 +56,13 @@ async function remove(id) {
   await query('DELETE FROM documents WHERE id = $1', [id]);
 }
 
-async function enableSharing(id, token) {
+async function enableSharing(id, token, expiresAt) {
   const result = await query(
     `UPDATE documents
-     SET share_token = $2, is_public = TRUE, updated_at = NOW()
+     SET share_token = $2, is_public = TRUE, share_token_expires_at = $3, updated_at = NOW()
      WHERE id = $1
      RETURNING id, user_id, title, share_token, is_public, order_index, updated_at`,
-    [id, token]
+    [id, token, expiresAt]
   );
 
   return result.rows[0] || null;

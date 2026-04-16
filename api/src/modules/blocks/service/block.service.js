@@ -182,6 +182,14 @@ async function getSharedDocument(token) {
   }
 
   const first = rows[0];
+
+  // Check if token has expired
+  if (first.share_token_expires_at) {
+    const expiryTime = new Date(first.share_token_expires_at).getTime();
+    if (expiryTime < Date.now()) {
+      throw new AppError('Share token has expired', 410, errorCodes.SHARE_NOT_FOUND);
+    }
+  }
   const blocks = rows
     .filter((row) => row.block_id)
     .map((row) => ({
