@@ -18,7 +18,7 @@ const allowedOrigins = Array.isArray(env.corsOrigin)
       .filter(Boolean);
 
 const corsOptions = {
-  origin: "https://document-editor-ebnl.vercel.app/",
+  origin: "*",
   credentials: true
 };
 
