@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getSharedDocument } from '../lib/apiClient';
+import { PublicSharePageSkeleton } from '../components/ui/LoadingSkeletons';
 
 function renderBlock(block) {
   const text = block?.content?.text || '';
@@ -121,25 +122,7 @@ export default function PublicSharePage() {
   }, [token]);
 
   if (loading) {
-    return (
-      <main className="bn-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div className="bn-stage">
-          <div style={{ textAlign: 'center' }}>
-            <div style={{
-              display: 'inline-block',
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              border: '3px solid #e5e7eb',
-              borderTopColor: '#8b5cf6',
-              animation: 'spin 1s linear infinite',
-            }} />
-            <p style={{ marginTop: '1rem', color: '#6b7280', fontSize: '0.95rem' }}>Loading shared document...</p>
-          </div>
-          <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-        </div>
-      </main>
-    );
+    return <PublicSharePageSkeleton />;
   }
 
   if (error || !payload) {

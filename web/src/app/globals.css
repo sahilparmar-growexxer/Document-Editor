@@ -59,6 +59,25 @@ input:focus-visible {
   text-shadow: 0 0 30px rgba(34, 211, 238, 0.35);
 }
 
+.bn-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #eef2f7 0%, #e2e8f0 50%, #eef2f7 100%);
+  background-size: 220% 100%;
+  border-radius: 0.45rem;
+  animation: bn-skeleton-shimmer 1.3s ease-in-out infinite;
+}
+
+@keyframes bn-skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 .editor-shell {
   position: relative;
   border: 1px solid rgba(148, 163, 184, 0.25);

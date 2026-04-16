@@ -10,6 +10,7 @@ import {
   updateBlock
 } from '../../lib/apiClient';
 import BlockItem from './BlockItem';
+import { BlockEditorSkeleton } from '../ui/LoadingSkeletons';
 
 function normalizeBlocks(rows) {
   return [...rows].sort((a, b) => {
@@ -513,7 +514,7 @@ export default function BlockEditor({
   }
 
   if (loading) {
-    return <p className="text-sm text-slate-300">Loading editor...</p>;
+    return <BlockEditorSkeleton />;
   }
 
   const isAllSelected = blocks.length > 0 && selectedBlockIds.length === blocks.length;

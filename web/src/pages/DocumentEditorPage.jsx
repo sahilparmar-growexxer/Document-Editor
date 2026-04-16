@@ -18,6 +18,7 @@ import {
   enableDocumentShare,
   disableDocumentShare
 } from '../lib/apiClient';
+import { DocumentEditorPageSkeleton } from '../components/ui/LoadingSkeletons';
 
 export default function DocumentEditorPage() {
   const { documentId } = useParams();
@@ -562,27 +563,7 @@ export default function DocumentEditorPage() {
   }
 
   if (loading) {
-    return (
-      <main className="bn-page">
-        <div className="bn-stage" style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div
-              style={{
-                display: 'inline-block',
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                border: '3px solid #e5e7eb',
-                borderTopColor: '#8b5cf6',
-                animation: 'bn-spin 1s linear infinite'
-              }}
-            />
-            <p style={{ marginTop: '1rem', color: '#6b7280', fontSize: '0.95rem' }}>Loading document...</p>
-            <style>{`@keyframes bn-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-          </div>
-        </div>
-      </main>
-    );
+    return <DocumentEditorPageSkeleton />;
   }
 
   if (!document) {

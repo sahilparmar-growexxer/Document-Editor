@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiFetch, ensureSession, logoutSession, reorderDocument } from '../lib/apiClient';
+import { DashboardPageSkeleton } from '../components/ui/LoadingSkeletons';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [isAuthed, setIsAuthed] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(true);
   const [documents, setDocuments] = useState([]);
   const [title, setTitle] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,11 +58,14 @@ export default function DashboardPage() {
   }
 
   async function loadDocuments() {
+    setIsLoadingDocuments(true);
     try {
       const data = await apiFetch('/documents');
       setDocuments(data);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setIsLoadingDocuments(false);
     }
   }
 
@@ -75,7 +81,8 @@ export default function DashboardPage() {
       }
 
       setIsAuthed(true);
-      loadDocuments();
+      setIsCheckingAuth(false);
+      await loadDocuments();
     })();
 
     return () => {
@@ -229,6 +236,10 @@ export default function DashboardPage() {
   async function logout() {
     await logoutSession();
     navigate('/login');
+  }
+
+  if (isCheckingAuth || (isAuthed && isLoadingDocuments)) {
+    return <DashboardPageSkeleton />;
   }
 
   if (!isAuthed) {

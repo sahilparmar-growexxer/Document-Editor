@@ -5,7 +5,34 @@ const API_URL =
    'https://document-editor-1-nj6y.onrender.com/'
 const BASE_URL = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
 
-let accessToken = '';
+const ACCESS_TOKEN_STORAGE_KEY = 'blocknote_access_token';
+
+function readStoredAccessToken() {
+  if (typeof window === 'undefined') return '';
+
+  try {
+    return window.localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY) || '';
+  } catch (_err) {
+    return '';
+  }
+}
+
+function persistAccessToken(token) {
+  if (typeof window === 'undefined') return;
+
+  try {
+    if (!token) {
+      window.localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
+      return;
+    }
+
+    window.localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token);
+  } catch (_err) {
+    // Ignore storage errors (private mode / disabled storage).
+  }
+}
+
+let accessToken = readStoredAccessToken();
 let refreshInFlight = null;
 
 const api = axios.create({
@@ -41,6 +68,7 @@ async function requestTokenRefresh() {
     }
 
     accessToken = nextAccessToken;
+    persistAccessToken(nextAccessToken);
     return nextAccessToken;
   })();
 
@@ -66,6 +94,7 @@ api.interceptors.response.use(
           return api(originalRequest);
         } catch (_refreshError) {
           accessToken = '';
+          persistAccessToken('');
         }
       }
     }
@@ -115,10 +144,12 @@ export function getAccessToken() {
 
 export function setTokens(nextAccessToken) {
   accessToken = nextAccessToken || '';
+  persistAccessToken(accessToken);
 }
 
 export function clearTokens() {
   accessToken = '';
+  persistAccessToken('');
 }
 
 export async function refreshAccessToken() {
