@@ -28,7 +28,7 @@ app.use(cors({
 
 morgan.token('request-id', (req) => req.requestId || '-');
 
-app.use(cors(corsOptions));
+
 
 app.use(securityHeadersMiddleware);
 app.use(requestIdMiddleware);
