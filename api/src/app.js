@@ -10,17 +10,21 @@ import env from './config/env.js';
 const app = express();
 app.set('trust proxy', 1);
 
-const allowedOrigins = Array.isArray(env.corsOrigin)
-  ? env.corsOrigin
-  : String(env.corsOrigin)
-      .split(',')
-      .map((origin) => origin.trim())
-      .filter(Boolean);
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://document-editor-qx2l.vercel.app/"
+];
 
-const corsOptions = {
-  origin: "*",
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS not allowed"));
+    }
+  },
   credentials: true
-};
+}));
 
 morgan.token('request-id', (req) => req.requestId || '-');
 
