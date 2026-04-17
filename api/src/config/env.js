@@ -14,7 +14,7 @@ function resolveSecret(primaryKey, sharedKey, label) {
 
 const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
-  port: Number(process.env.PORT || 5000),
+  port: Number(process.env.PORT || 4000),
   databaseUrl:
     process.env.DATABASE_URL ||
     process.env.POSTGRES_URL ||
@@ -31,6 +31,8 @@ const env = {
   refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
   refreshTokenCookieName: process.env.REFRESH_TOKEN_COOKIE_NAME || 'refreshToken',
   refreshTokenHashPepper: process.env.REFRESH_TOKEN_HASH_PEPPER || resolveSecret('JWT_REFRESH_SECRET', 'JWT_SECRET', 'refresh-hash'),
+  geminiApiKey: process.env.GEMINI_API_KEY || '',
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-flash-latest',
   authRateLimitWindowMs: Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
   authRateLimitMax: Number(process.env.AUTH_RATE_LIMIT_MAX || 100),
   corsOrigin: process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? undefined : [
@@ -59,6 +61,10 @@ if (env.nodeEnv === 'production' && !env.corsOrigin) {
 
 if (env.nodeEnv !== 'production' && !hasExplicitJwtSecrets) {
   console.warn('JWT secrets are not fully configured. Using derived fallback values for local development only.');
+}
+
+if (!env.geminiApiKey) {
+  console.warn('GEMINI_API_KEY is not configured. Rewrite assistant will need it to call Gemini.');
 }
 
 export default env;

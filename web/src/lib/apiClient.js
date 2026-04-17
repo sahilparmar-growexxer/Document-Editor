@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_URL =
-  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_URL || 'http://localhost:4000' ||
    'https://document-editor-1-nj6y.onrender.com'
 const BASE_URL = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
 
@@ -196,6 +196,14 @@ export async function deleteBlock(blockId) {
 
 export async function splitBlock(payload) {
   return apiFetch('/blocks/split', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+export async function rewriteBlock(payload) {
+  return apiFetch('/blocks/rewrite', {
     method: 'POST',
     body: JSON.stringify(payload),
     headers: { 'Content-Type': 'application/json' }

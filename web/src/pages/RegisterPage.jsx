@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiFetch, setTokens } from '../lib/apiClient';
 
-export default function RegisterPage() {
+export default function RegisterPage({ onAuthSuccess }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,6 +35,9 @@ export default function RegisterPage() {
         body: JSON.stringify({ email, password })
       });
       setTokens(data.tokens.accessToken);
+      if (typeof onAuthSuccess === 'function') {
+        onAuthSuccess();
+      }
       navigate('/dashboard');
     } catch (err) {
       setError(err.message);

@@ -1,5 +1,6 @@
 import AppError from '../../../common/errors/AppError.js';
 import errorCodes from '../../../common/errors/errorCodes.js';
+import env from '../../../config/env.js';
 import { midpointOrder } from '../../../common/utils/order.util.js';
 import { findById as findDocumentById } from '../../documents/repository/document.repository.js';
 import {
@@ -25,6 +26,66 @@ function normalizeTextContent(content) {
   }
 
   return content;
+}
+
+function buildRewritePrompt(text, mode) {
+  const instructionMap = {
+    shorter: 'Rewrite the text to be shorter while preserving meaning.',
+    clearer: 'Rewrite the text to be clearer and easier to understand.',
+    formal: 'Rewrite the text in a formal tone.',
+    'bullet-list': 'Rewrite the text as concise bullet points.',
+    checklist: 'Rewrite the text as checklist items using - [ ] markers.'
+  };
+
+  const instruction = instructionMap[mode] || 'Rewrite the text while preserving its meaning.';
+
+  return [
+    'You are a document editor assistant.',
+    instruction,
+    'Return only the rewritten text with no markdown fences, no preamble, and no explanation.',
+    `Input text:\n${text}`
+  ].join('\n\n');
+}
+
+async function generateGeminiRewrite(text, mode) {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(env.geminiModel)}:generateContent?key=${encodeURIComponent(env.geminiApiKey)}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: buildRewritePrompt(text, mode) }]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.4,
+          topP: 0.95,
+          maxOutputTokens: 512
+        }
+      })
+    }
+  );
+
+  const responseText = await response.text();
+  let responseJson = null;
+
+  try {
+    responseJson = responseText ? JSON.parse(responseText) : null;
+  } catch (_error) {
+    responseJson = null;
+  }
+
+  if (!response.ok) {
+    const message = responseJson?.error?.message || responseJson?.message || `Gemini request failed with status ${response.status}`;
+    throw new AppError(message, 502, errorCodes.VALIDATION_ERROR);
+  }
+
+  return String(responseJson?.candidates?.[0]?.content?.parts?.map((part) => part?.text || '').join('') || '').trim();
 }
 
 async function ensureDocumentOwnership(userId, documentId) {
@@ -180,6 +241,43 @@ async function splitBlock(userId, payload) {
   return { updatedBlock, newBlock };
 }
 
+async function rewriteBlock(userId, payload) {
+  const { documentId, blockId, mode } = payload;
+
+  const block = await findByIdForUser(userId, blockId);
+  if (!block || block.document_id !== documentId) {
+    throw new AppError('Block not found', 404, errorCodes.BLOCK_NOT_FOUND);
+  }
+
+  const currentContent = normalizeTextContent(block.content);
+  const sourceText = String(currentContent.text || '').trim();
+
+  if (!sourceText) {
+    throw new AppError('Selected block does not contain text to rewrite', 400, errorCodes.VALIDATION_ERROR);
+  }
+
+  if (block.type === 'divider' || block.type === 'image') {
+    throw new AppError('Rewrite is not supported for this block type', 400, errorCodes.VALIDATION_ERROR);
+  }
+
+  if (!env.geminiApiKey) {
+    throw new AppError('GEMINI_API_KEY is not configured', 503, errorCodes.VALIDATION_ERROR);
+  }
+
+  const rewrittenText = await generateGeminiRewrite(sourceText, mode);
+
+  if (!rewrittenText) {
+    throw new AppError('Could not generate rewrite', 502, errorCodes.VALIDATION_ERROR);
+  }
+
+  return {
+    blockId: block.id,
+    mode,
+    originalText: sourceText,
+    rewrittenText
+  };
+}
+
 async function getSharedDocument(token) {
   const rows = await listPublicByShareToken(token);
   if (!rows.length) {
@@ -225,5 +323,6 @@ export {
   deleteBlock,
   reorderBlock,
   splitBlock,
+  rewriteBlock,
   getSharedDocument
 };
