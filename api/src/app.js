@@ -17,19 +17,17 @@ const configuredOrigins = Array.isArray(env.corsOrigin)
       .map((origin) => origin.trim())
       .filter(Boolean);
 
-const allowedOrigins = configuredOrigins.length
-  ? configuredOrigins
-  : [
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'http://127.0.0.1:3000',
-      'http://127.0.0.1:5173',
-      'https://document-editor-qx2l.vercel.app'
-    ];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://document-editor-qx2l.vercel.app"
+];
 
 app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+  origin: function (origin, callback) {
+    // allow requests with no origin (like Postman)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("CORS not allowed"));
@@ -37,6 +35,9 @@ app.use(cors({
   },
   credentials: true
 }));
+
+app.options('*', cors());
+
 
 morgan.token('request-id', (req) => req.requestId || '-');
 

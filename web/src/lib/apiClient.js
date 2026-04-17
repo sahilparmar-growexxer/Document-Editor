@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
-   'https://document-editor-1-nj6y.onrender.com/'
+   'https://document-editor-1-nj6y.onrender.com'
 const BASE_URL = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
 
 axios.defaults.withCredentials = true;
