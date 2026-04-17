@@ -7,6 +7,7 @@ import {
   listBlocks,
   reorderBlock,
   splitBlock,
+  rewriteBlock,
   updateBlock
 } from '../../lib/apiClient';
 import BlockItem from './BlockItem';
@@ -35,6 +36,13 @@ export default function BlockEditor({
   const [focusRequest, setFocusRequest] = useState(null);
   const [draggingId, setDraggingId] = useState('');
   const [activeBlockId, setActiveBlockId] = useState('');
+  const [rewriteDialogOpen, setRewriteDialogOpen] = useState(false);
+  const [rewriteMode, setRewriteMode] = useState('shorter');
+  const [rewritePreview, setRewritePreview] = useState('');
+  const [rewriteOriginal, setRewriteOriginal] = useState('');
+  const [rewriteLoading, setRewriteLoading] = useState(false);
+  const [rewriteError, setRewriteError] = useState('');
+  const [rewriteTargetBlockId, setRewriteTargetBlockId] = useState('');
 
   const pendingRef = useRef(new Map());
   const revisionRef = useRef(new Map());
@@ -520,6 +528,98 @@ export default function BlockEditor({
     }
   }
 
+  function getRewriteTargetBlock() {
+    const selectedTargetId = selectedBlockIds.length === 1 ? selectedBlockIds[0] : '';
+    const targetId = selectedTargetId || activeBlockId || blocks[0]?.id || '';
+    if (!targetId) return null;
+    return blocks.find((item) => item.id === targetId) || null;
+  }
+
+  function openRewriteAssistant() {
+    const block = getRewriteTargetBlock();
+    const sourceText = String(block?.content?.text || '').trim();
+
+    if (!block || !sourceText || block.type === 'divider' || block.type === 'image') {
+      setError('Select a text block to rewrite');
+      return;
+    }
+
+    setRewriteTargetBlockId(block.id);
+    setRewriteMode('shorter');
+    setRewritePreview('');
+    setRewriteOriginal(sourceText);
+    setRewriteError('');
+    setRewriteDialogOpen(true);
+  }
+
+  async function generateRewrite() {
+    const targetBlock = blocks.find((item) => item.id === rewriteTargetBlockId);
+    const sourceText = String(targetBlock?.content?.text || '').trim();
+
+    if (!targetBlock || !sourceText) {
+      setRewriteError('Select a text block to rewrite');
+      return;
+    }
+
+    setRewriteLoading(true);
+    setRewriteError('');
+
+    try {
+      await flushPending();
+      const result = await rewriteBlock({
+        documentId: document.id,
+        blockId: targetBlock.id,
+        mode: rewriteMode
+      });
+
+      setRewriteOriginal(result.originalText || sourceText);
+      setRewritePreview(result.rewrittenText || '');
+    } catch (err) {
+      setRewriteError(err.message || 'Could not generate rewrite');
+    } finally {
+      setRewriteLoading(false);
+    }
+  }
+
+  async function applyRewrite() {
+    const targetBlock = blocks.find((item) => item.id === rewriteTargetBlockId);
+    if (!targetBlock || !rewritePreview) return;
+
+    const nextContent = {
+      ...(targetBlock.content || {}),
+      text: rewritePreview
+    };
+
+    setRewriteLoading(true);
+    setRewriteError('');
+
+    try {
+      pendingRef.current.delete(rewriteTargetBlockId);
+      revisionRef.current.delete(rewriteTargetBlockId);
+
+      setBlocks((prev) =>
+        prev.map((block) =>
+          block.id === rewriteTargetBlockId
+            ? {
+                ...block,
+                content: nextContent
+              }
+            : block
+        )
+      );
+
+      await updateBlock(rewriteTargetBlockId, { content: nextContent });
+      setRewriteDialogOpen(false);
+      setRewritePreview('');
+      setRewriteOriginal('');
+      setRewriteTargetBlockId('');
+    } catch (err) {
+      setRewriteError(err.message || 'Could not apply rewrite');
+    } finally {
+      setRewriteLoading(false);
+    }
+  }
+
   async function copyShareLink() {
     if (!document.share_token) return;
     const link = `${window.location.origin}/share/${document.share_token}`;
@@ -604,6 +704,14 @@ export default function BlockEditor({
 
       <div className="editor-floating-actions" role="region" aria-label="Block selection actions">
         <span className="editor-floating-count">{selectedCount} selected</span>
+        <button
+          type="button"
+          className="editor-floating-btn editor-floating-btn-ai"
+          onClick={openRewriteAssistant}
+          disabled={!blocks.length}
+        >
+          Rewrite
+        </button>
         <button type="button" className="editor-floating-btn" onClick={handleSelectAllToggle}>
           {isAllSelected ? 'Clear All' : 'Select All'}
         </button>
@@ -616,6 +724,110 @@ export default function BlockEditor({
           Delete
         </button>
       </div>
+
+      {rewriteDialogOpen ? (
+        <div className="bn-rewrite-overlay" onClick={() => !rewriteLoading && setRewriteDialogOpen(false)} role="dialog" aria-modal="true" aria-labelledby="rewrite-title">
+          <div className="bn-rewrite-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="bn-rewrite-header">
+              <div className="bn-rewrite-header-content">
+                <span className="bn-rewrite-badge">✨ AI Assistant</span>
+                <h2 id="rewrite-title">Rewrite Block</h2>
+                <p className="bn-rewrite-description">Choose a style and generate alternative versions of your content</p>
+              </div>
+              <button
+                type="button"
+                className="bn-rewrite-close"
+                onClick={() => {
+                  if (rewriteLoading) return;
+                  setRewriteDialogOpen(false);
+                  setRewritePreview('');
+                  setRewriteOriginal('');
+                  setRewriteTargetBlockId('');
+                  setRewriteError('');
+                }}
+                aria-label="Close rewrite dialog"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="bn-rewrite-content">
+              <div className="bn-rewrite-mode-section">
+                <label htmlFor="rewrite-mode" className="bn-rewrite-label">
+                  Rewrite Style
+                </label>
+                <div className="bn-rewrite-select-wrapper">
+                  <select
+                    id="rewrite-mode"
+                    className="bn-rewrite-select"
+                    value={rewriteMode}
+                    onChange={(e) => {
+                      setRewriteMode(e.target.value);
+                      setRewritePreview('');
+                      setRewriteError('');
+                    }}
+                    disabled={rewriteLoading}
+                  >
+                    <option value="shorter">📏 Shorter – Make it concise</option>
+                    <option value="clearer">💡 Clearer – Improve clarity</option>
+                    <option value="formal">📋 Formal – Professional tone</option>
+                    <option value="bullet-list">📌 Bullet List – Key points</option>
+                    <option value="checklist">✓ Checklist – Actionable items</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="bn-rewrite-grid">
+                <section className="bn-rewrite-section">
+                  <div className="bn-rewrite-section-header">
+                    <h3>Original</h3>
+                  </div>
+                  <div className="bn-rewrite-box bn-rewrite-box-original">
+                    <div className="bn-rewrite-text">{rewriteOriginal || 'Your content appears here'}</div>
+                  </div>
+                </section>
+                <section className="bn-rewrite-section">
+                  <div className="bn-rewrite-section-header">
+                    <h3>Preview</h3>
+                    {rewriteLoading && <span className="bn-rewrite-loader">⟳</span>}
+                  </div>
+                  <div className={`bn-rewrite-box bn-rewrite-box-preview ${rewriteLoading ? 'loading' : ''}`}>
+                    <div className="bn-rewrite-text">
+                      {rewriteLoading ? 'Generating rewrite...' : rewritePreview || 'Generate a rewrite to see the preview'}
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              {rewriteError && (
+                <div className="bn-rewrite-banner bn-rewrite-banner-error">
+                  <span>⚠️</span>
+                  <span>{rewriteError}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="bn-rewrite-actions">
+              <button 
+                type="button" 
+                className="bn-rewrite-secondary" 
+                onClick={generateRewrite} 
+                disabled={rewriteLoading}
+              >
+                {rewriteLoading ? 'Generating...' : rewritePreview ? '↻ Regenerate' : '⚡ Generate'}
+              </button>
+              <button 
+                type="button" 
+                className="bn-rewrite-primary" 
+                onClick={applyRewrite} 
+                disabled={rewriteLoading || !rewritePreview}
+              >
+                ✓ Apply Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

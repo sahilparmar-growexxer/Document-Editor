@@ -210,6 +210,14 @@ export async function reorderBlock(payload) {
   });
 }
 
+export async function rewriteBlock(payload) {
+  return apiFetch('/blocks/rewrite', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
 export async function enableDocumentShare(documentId) {
   return apiFetch(`/documents/${documentId}/share`, { method: 'POST' });
 }
