@@ -6,7 +6,6 @@ import {
   deleteBlock,
   reorderBlock,
   splitBlock,
-  rewriteBlock,
   getSharedDocument
 } from '../service/block.service.js';
 
@@ -67,15 +66,6 @@ async function split(req, res, next) {
   }
 }
 
-async function rewrite(req, res, next) {
-  try {
-    const result = await rewriteBlock(req.user.id, req.validated.body);
-    return sendSuccess(res, 200, result);
-  } catch (error) {
-    return next(error);
-  }
-}
-
 async function shared(req, res, next) {
   try {
     const { token } = req.validated.params;
@@ -93,6 +83,5 @@ export {
   remove,
   reorder,
   split,
-  rewrite,
   shared
 };

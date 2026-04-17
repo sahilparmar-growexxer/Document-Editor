@@ -38,10 +38,6 @@ export default function App() {
   const [authBootChecked, setAuthBootChecked] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
 
-  function handleAuthSuccess() {
-    setIsAuthed(true);
-  }
-
   useEffect(() => {
     let active = true;
 
@@ -71,7 +67,7 @@ export default function App() {
         path="/login"
         element={(
           <RedirectIfAuthed isAuthed={isAuthed}>
-            <LoginPage onAuthSuccess={handleAuthSuccess} />
+            <LoginPage />
           </RedirectIfAuthed>
         )}
       />
@@ -79,7 +75,7 @@ export default function App() {
         path="/register"
         element={(
           <RedirectIfAuthed isAuthed={isAuthed}>
-            <RegisterPage onAuthSuccess={handleAuthSuccess} />
+            <RegisterPage />
           </RedirectIfAuthed>
         )}
       />

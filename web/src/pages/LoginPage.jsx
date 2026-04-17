@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiFetch, setTokens } from '../lib/apiClient';
 
-export default function LoginPage({ onAuthSuccess }) {
+export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,9 +29,6 @@ export default function LoginPage({ onAuthSuccess }) {
         body: JSON.stringify({ email, password })
       });
       setTokens(data.tokens.accessToken);
-      if (typeof onAuthSuccess === 'function') {
-        onAuthSuccess();
-      }
 
       const docs = await apiFetch('/documents');
       if (Array.isArray(docs) && docs.length > 0) {

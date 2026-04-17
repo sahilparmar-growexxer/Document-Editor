@@ -68,16 +68,6 @@ const splitBlockSchema = z.object({
   query: z.object({}).optional()
 });
 
-const rewriteBlockSchema = z.object({
-  body: z.object({
-    documentId: z.string().uuid('Invalid document id'),
-    blockId: z.string().uuid('Invalid block id'),
-    mode: z.enum(['shorter', 'clearer', 'formal', 'bullet-list', 'checklist'])
-  }),
-  params: z.object({}).optional(),
-  query: z.object({}).optional()
-});
-
 const shareTokenParamSchema = z.object({
   body: z.object({}).optional(),
   params: z.object({
@@ -93,6 +83,5 @@ export {
   deleteBlockSchema,
   reorderBlockSchema,
   splitBlockSchema,
-  rewriteBlockSchema,
   shareTokenParamSchema
 };
