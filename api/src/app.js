@@ -10,10 +10,22 @@ import env from './config/env.js';
 const app = express();
 app.set('trust proxy', 1);
 
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://document-editor-qx2l.vercel.app"
-];
+const configuredOrigins = Array.isArray(env.corsOrigin)
+  ? env.corsOrigin
+  : String(env.corsOrigin || '')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean);
+
+const allowedOrigins = configuredOrigins.length
+  ? configuredOrigins
+  : [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5173',
+      'https://document-editor-qx2l.vercel.app'
+    ];
 
 app.use(cors({
   origin: function(origin, callback) {

@@ -34,7 +34,7 @@ export default function RegisterPage() {
         method: 'POST',
         body: JSON.stringify({ email, password })
       });
-      setTokens(data.tokens.accessToken, data.tokens.refreshToken);
+      setTokens(data.tokens.accessToken);
       navigate('/dashboard');
     } catch (err) {
       setError(err.message);

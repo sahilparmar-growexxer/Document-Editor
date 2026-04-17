@@ -40,8 +40,7 @@ function parseCookieHeader(cookieHeader = '') {
 
 function getRefreshTokenFromRequest(req) {
   const cookies = parseCookieHeader(req.headers.cookie || '');
-  const bodyToken = req?.validated?.body?.refreshToken || req?.body?.refreshToken || '';
-  return cookies[env.refreshTokenCookieName] || bodyToken || '';
+  return cookies[env.refreshTokenCookieName] || '';
 }
 
 async function register(req, res, next) {
@@ -52,8 +51,7 @@ async function register(req, res, next) {
     return sendSuccess(res, 201, {
       user: result.user,
       tokens: {
-        accessToken: result.tokens.accessToken,
-        refreshToken: result.tokens.refreshToken
+        accessToken: result.tokens.accessToken
       }
     });
   } catch (error) {
@@ -69,8 +67,7 @@ async function login(req, res, next) {
     return sendSuccess(res, 200, {
       user: result.user,
       tokens: {
-        accessToken: result.tokens.accessToken,
-        refreshToken: result.tokens.refreshToken
+        accessToken: result.tokens.accessToken
       }
     });
   } catch (error) {
@@ -83,10 +80,7 @@ async function refresh(req, res, next) {
     const refreshToken = getRefreshTokenFromRequest(req);
     const result = await refreshTokenService(refreshToken);
     res.cookie(env.refreshTokenCookieName, result.refreshToken, getRefreshCookieOptions());
-    return sendSuccess(res, 200, {
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken
-    });
+    return sendSuccess(res, 200, { accessToken: result.accessToken });
   } catch (error) {
     return next(error);
   }
