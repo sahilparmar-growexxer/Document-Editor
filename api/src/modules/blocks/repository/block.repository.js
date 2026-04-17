@@ -24,6 +24,19 @@ async function findById(id) {
   return result.rows[0] || null;
 }
 
+async function findByIdForUser(userId, id) {
+  const result = await query(
+    `SELECT b.id, b.document_id, b.type, b.content, b.order_index, b.parent_id, b.created_at
+     FROM blocks b
+     JOIN documents d ON d.id = b.document_id
+     WHERE b.id = $1 AND d.user_id = $2
+     LIMIT 1`,
+    [id, userId]
+  );
+
+  return result.rows[0] || null;
+}
+
 async function findByIdForDocument(documentId, id) {
   const result = await query(
     `SELECT id, document_id, type, content, order_index, parent_id, created_at
@@ -132,6 +145,7 @@ async function listPublicByShareToken(token) {
 export {
   listByDocumentId,
   findById,
+  findByIdForUser,
   findByIdForDocument,
   findByIdOrNull,
   create,

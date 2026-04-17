@@ -121,7 +121,7 @@ export default function BlockEditor({
     setSaveState('saving');
 
     try {
-      await Promise.all(
+      const results = await Promise.allSettled(
         entries.map(async ([blockId, entry]) => {
           await updateBlock(blockId, entry.payload);
           const latest = revisionRef.current.get(blockId) || 0;
@@ -130,6 +130,18 @@ export default function BlockEditor({
           }
         })
       );
+
+      const criticalFailure = results.find((result) => {
+        if (result.status !== 'rejected') return false;
+        const status = result.reason?.status;
+        const message = String(result.reason?.message || '').toLowerCase();
+        const isBlockMissing = status === 404 && message.includes('block not found');
+        return !isBlockMissing;
+      });
+
+      if (criticalFailure?.status === 'rejected') {
+        throw criticalFailure.reason;
+      }
 
       setSaveState('saved');
     } catch (err) {
@@ -267,6 +279,9 @@ export default function BlockEditor({
     if (idx <= 0) return;
     const previous = current[idx - 1];
 
+    pendingRef.current.delete(blockId);
+    revisionRef.current.delete(blockId);
+
     setBlocks((prev) => prev.filter((item) => item.id !== blockId));
 
     try {
@@ -285,6 +300,8 @@ export default function BlockEditor({
     if (idx < 0) return;
 
     const previous = idx > 0 ? current[idx - 1] : null;
+    pendingRef.current.delete(blockId);
+    revisionRef.current.delete(blockId);
     setBlocks((prev) => prev.filter((item) => item.id !== blockId));
     setSelectedBlockIds((prev) => prev.filter((id) => id !== blockId));
 
@@ -333,6 +350,11 @@ export default function BlockEditor({
       .map((block) => block.id);
 
     if (!idsToDelete.length) return;
+
+    idsToDelete.forEach((id) => {
+      pendingRef.current.delete(id);
+      revisionRef.current.delete(id);
+    });
 
     setBlocks((prev) => prev.filter((block) => !idsToDelete.includes(block.id)));
     setSelectedBlockIds([]);

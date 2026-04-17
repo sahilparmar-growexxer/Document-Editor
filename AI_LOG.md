@@ -265,3 +265,141 @@ The AI generated a React-based command menu component with:
 - Handled edge cases like removing `/` and closing menu properly
 - Integrated command menu cleanly with block editor state management
 
+
+## 2026-04-16
+
+**Tool:** Copilot
+
+**What I asked for:**
+I asked the AI to implement advanced editor features for Day 4, including:
+
+- Drag-and-drop block reordering with proper `order_index` updates
+- Auto-save mechanism with race condition handling (to avoid overwriting latest changes)
+* Shareable read-only link system for documents
+
+The goal was to ensure production-level behavior with correct ordering logic, safe concurrent updates, and secure sharing.
+
+---
+
+**What it generated:**
+The AI generated:
+
+- A drag-and-drop implementation using basic index-based reordering
+- API logic for updating block order
+- A debounced auto-save mechanism
+- A simple share link feature using a token-based URL
+
+It also included frontend handlers for drag events and API calls for saving changes.
+
+---
+
+**What was wrong or missing:**
+
+- The drag reorder logic used array index-based updates instead of FLOAT `order_index`, which is inefficient and not scalable
+- Reordering caused multiple unnecessary updates instead of updating only affected blocks
+- Auto-save logic did not properly handle race conditions (multiple overlapping API calls could overwrite newer data)
+- No request cancellation or version tracking mechanism was implemented
+- Share link tokens were reusable indefinitely (no expiry or single-use control)
+- No validation for read-only access (users could still attempt write operations)
+- Backend did not enforce authorization checks for shared documents
+
+---
+
+**What I changed and why:**
+
+- Reimplemented drag reorder using FLOAT-based `order_index` to insert blocks efficiently without full list updates
+- Optimized reorder API to update only affected blocks instead of entire document
+- Added request versioning and last-write-wins strategy to handle race conditions safely
+- Implemented request cancellation using AbortController to prevent outdated API calls from overriding newer ones
+- Designed share token system with expiry (time-based) to improve security
+- Enforced read-only mode on shared documents at both frontend and backend levels
+- Added proper authorization checks to ensure only owners can edit documents
+- Improved overall system reliability and scalability by aligning implementation with production best practices
+
+These changes ensured correct behavior under concurrent edits, secure sharing, and efficient block management.
+
+
+## 2026-04-17
+
+**Tool:** Copilot
+
+
+**What I asked for:**
+I asked the AI to review and help implement all critical edge cases for the document editor before final submission. This included:
+
+- Block split behavior (Enter key mid-text)
+- Backspace handling in different scenarios
+- Slash command menu cleanup
+- Floating `order_index` precision and re-normalization
+- Share token security (read-only enforcement at API level)
+- Auto-save race condition handling
+- Document ownership validation
+
+The goal was to ensure the application behaves correctly under all edge conditions and passes strict evaluation.
+
+---
+
+**What it generated:**
+The AI provided:
+
+- Logic for splitting blocks into two parts based on cursor position
+- Basic handling for backspace and block merging
+- Suggestions for slash command menu filtering
+- Explanation of using FLOAT for `order_index`
+- High-level idea for preventing race conditions
+- Basic authentication checks
+
+---
+
+**What was wrong or missing:**
+
+- Split logic did not correctly preserve cursor position or handle mid-text splits without duplication
+- Backspace behavior for first block and non-text blocks (divider/image) was undefined
+- Slash command menu allowed `/heading` text to leak into block content
+- `order_index` logic did not handle precision collapse after multiple inserts (no re-normalization)
+- Share token enforcement was only on frontend, not validated in backend APIs
+- Auto-save logic did not properly prevent race conditions (older requests could overwrite newer changes)
+- Document ownership check was incomplete and not enforced consistently across endpoints
+
+---
+
+**What I changed and why:**
+
+- Implemented precise block split logic ensuring:
+
+  * No text loss or duplication
+  * Cursor moves correctly to new block
+
+- Defined and implemented clear backspace behaviors:
+
+  * First block -> no action or safe fallback
+  * Previous non-text block -> delete block or move cursor safely
+
+- Fixed slash menu behavior:
+
+  * Prevented `/command` text from entering block content
+  * Cleared input on Escape or selection
+  * Ensured clean UX similar to Notion
+
+- Improved `order_index` system:
+
+  * Used FLOAT midpoint logic for inserts
+  * Added re-normalization when gap < 0.001 to maintain precision
+
+- Enforced share token security at backend:
+
+  * Blocked all write operations (POST/PATCH/DELETE) when using share token
+  * Allowed only read operations
+
+- Solved auto-save race conditions:
+
+  * Ensured latest update always wins
+
+- Strengthened document ownership validation:
+
+  * Verified document belongs to authenticated user
+  * Returned 403 for unauthorized access attempts
+
+These changes ensured the system handles all critical edge cases reliably and meets production-level expectations for the final submission.
+
+

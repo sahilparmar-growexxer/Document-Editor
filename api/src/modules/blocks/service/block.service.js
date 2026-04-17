@@ -5,6 +5,7 @@ import { findById as findDocumentById } from '../../documents/repository/documen
 import {
   listByDocumentId,
   findById,
+  findByIdForUser,
   findByIdForDocument,
   findByIdOrNull,
   create,
@@ -40,12 +41,10 @@ async function ensureDocumentOwnership(userId, documentId) {
 }
 
 async function ensureBlockOwnership(userId, blockId) {
-  const block = await findById(blockId);
+  const block = await findByIdForUser(userId, blockId);
   if (!block) {
     throw new AppError('Block not found', 404, errorCodes.BLOCK_NOT_FOUND);
   }
-
-  await ensureDocumentOwnership(userId, block.document_id);
   return block;
 }
 
@@ -116,9 +115,12 @@ async function deleteBlock(userId, blockId) {
 async function reorderBlock(userId, payload) {
   const { documentId, blockId, previousBlockId = null, nextBlockId = null, parentId = null } = payload;
 
-  await ensureDocumentOwnership(userId, documentId);
-  const block = await findByIdForDocument(documentId, blockId);
+  const block = await findByIdForUser(userId, blockId);
   if (!block) {
+    throw new AppError('Block not found', 404, errorCodes.BLOCK_NOT_FOUND);
+  }
+
+  if (block.document_id !== documentId) {
     throw new AppError('Block not found', 404, errorCodes.BLOCK_NOT_FOUND);
   }
 
@@ -141,9 +143,12 @@ async function reorderBlock(userId, payload) {
 async function splitBlock(userId, payload) {
   const { documentId, blockId, cursorIndex } = payload;
 
-  await ensureDocumentOwnership(userId, documentId);
-  const block = await findByIdForDocument(documentId, blockId);
+  const block = await findByIdForUser(userId, blockId);
   if (!block) {
+    throw new AppError('Block not found', 404, errorCodes.BLOCK_NOT_FOUND);
+  }
+
+  if (block.document_id !== documentId) {
     throw new AppError('Block not found', 404, errorCodes.BLOCK_NOT_FOUND);
   }
 
