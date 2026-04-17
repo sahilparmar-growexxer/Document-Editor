@@ -14,7 +14,7 @@ function getRefreshCookieOptions() {
     secure: isProduction,
     sameSite: isProduction ? 'none' : 'lax',
     maxAge: 30 * 24 * 60 * 60 * 1000,
-    path: '/auth'
+    path: '/auth/refresh',
   };
 }
 
