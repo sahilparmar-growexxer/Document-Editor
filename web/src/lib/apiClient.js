@@ -6,6 +6,7 @@ const API_URL =
 const BASE_URL = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
 
 const ACCESS_TOKEN_STORAGE_KEY = 'blocknote_access_token';
+const REFRESH_TOKEN_STORAGE_KEY = 'blocknote_refresh_token';
 
 function readStoredAccessToken() {
   if (typeof window === 'undefined') return '';
@@ -32,7 +33,33 @@ function persistAccessToken(token) {
   }
 }
 
+function readStoredRefreshToken() {
+  if (typeof window === 'undefined') return '';
+
+  try {
+    return window.localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY) || '';
+  } catch (_err) {
+    return '';
+  }
+}
+
+function persistRefreshToken(token) {
+  if (typeof window === 'undefined') return;
+
+  try {
+    if (!token) {
+      window.localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+      return;
+    }
+
+    window.localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, token);
+  } catch (_err) {
+    // Ignore storage errors (private mode / disabled storage).
+  }
+}
+
 let accessToken = readStoredAccessToken();
+let refreshToken = readStoredRefreshToken();
 let refreshInFlight = null;
 
 const api = axios.create({
@@ -59,8 +86,13 @@ async function requestTokenRefresh() {
   if (refreshInFlight) return refreshInFlight;
 
   refreshInFlight = (async () => {
-    const response = await axios.post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true });
+    const response = await axios.post(
+      `${BASE_URL}/auth/refresh`,
+      refreshToken ? { refreshToken } : {},
+      { withCredentials: true }
+    );
     const nextAccessToken = response?.data?.data?.accessToken || '';
+    const nextRefreshToken = response?.data?.data?.refreshToken || '';
     if (!nextAccessToken) {
       const err = new Error('Unauthorized');
       err.status = 401;
@@ -69,6 +101,10 @@ async function requestTokenRefresh() {
 
     accessToken = nextAccessToken;
     persistAccessToken(nextAccessToken);
+    if (nextRefreshToken) {
+      refreshToken = nextRefreshToken;
+      persistRefreshToken(nextRefreshToken);
+    }
     return nextAccessToken;
   })();
 
@@ -94,7 +130,9 @@ api.interceptors.response.use(
           return api(originalRequest);
         } catch (_refreshError) {
           accessToken = '';
+          refreshToken = '';
           persistAccessToken('');
+          persistRefreshToken('');
         }
       }
     }
@@ -142,14 +180,26 @@ export function getAccessToken() {
   return accessToken;
 }
 
-export function setTokens(nextAccessToken) {
+export function setTokens(nextAccessToken, nextRefreshToken = '') {
   accessToken = nextAccessToken || '';
   persistAccessToken(accessToken);
+
+  if (typeof nextRefreshToken === 'string' && nextRefreshToken) {
+    refreshToken = nextRefreshToken;
+    persistRefreshToken(nextRefreshToken);
+  }
+}
+
+export function setRefreshToken(nextRefreshToken) {
+  refreshToken = nextRefreshToken || '';
+  persistRefreshToken(refreshToken);
 }
 
 export function clearTokens() {
   accessToken = '';
+  refreshToken = '';
   persistAccessToken('');
+  persistRefreshToken('');
 }
 
 export async function refreshAccessToken() {

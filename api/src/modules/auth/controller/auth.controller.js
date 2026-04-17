@@ -40,7 +40,8 @@ function parseCookieHeader(cookieHeader = '') {
 
 function getRefreshTokenFromRequest(req) {
   const cookies = parseCookieHeader(req.headers.cookie || '');
-  return cookies[env.refreshTokenCookieName] || '';
+  const bodyToken = req?.validated?.body?.refreshToken || req?.body?.refreshToken || '';
+  return cookies[env.refreshTokenCookieName] || bodyToken || '';
 }
 
 async function register(req, res, next) {
@@ -50,7 +51,10 @@ async function register(req, res, next) {
     res.cookie(env.refreshTokenCookieName, result.tokens.refreshToken, getRefreshCookieOptions());
     return sendSuccess(res, 201, {
       user: result.user,
-      tokens: { accessToken: result.tokens.accessToken }
+      tokens: {
+        accessToken: result.tokens.accessToken,
+        refreshToken: result.tokens.refreshToken
+      }
     });
   } catch (error) {
     return next(error);
@@ -64,7 +68,10 @@ async function login(req, res, next) {
     res.cookie(env.refreshTokenCookieName, result.tokens.refreshToken, getRefreshCookieOptions());
     return sendSuccess(res, 200, {
       user: result.user,
-      tokens: { accessToken: result.tokens.accessToken }
+      tokens: {
+        accessToken: result.tokens.accessToken,
+        refreshToken: result.tokens.refreshToken
+      }
     });
   } catch (error) {
     return next(error);
@@ -76,7 +83,10 @@ async function refresh(req, res, next) {
     const refreshToken = getRefreshTokenFromRequest(req);
     const result = await refreshTokenService(refreshToken);
     res.cookie(env.refreshTokenCookieName, result.refreshToken, getRefreshCookieOptions());
-    return sendSuccess(res, 200, { accessToken: result.accessToken });
+    return sendSuccess(res, 200, {
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken
+    });
   } catch (error) {
     return next(error);
   }
