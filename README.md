@@ -1,3 +1,19 @@
+## Performance Disclaimer
+
+The application is currently deployed on a free-tier hosting service (Render) at ohio (US) region. Due to the limitations of this environment, you may experience:
+
+* Initial delay or cold start when opening the app after inactivity
+* Slower API response times
+* Occasional lag in auto-save or data fetching
+
+These performance issues are **environment-related**, not due to application logic or architecture.
+
+In a production setup with dedicated resources (e.g., AWS, Vercel Pro, or optimized containers), the application performs smoothly with significantly improved response times.
+
+Thank you for your understanding during evaluation.
+
+
+
 # BlockNote
 
 BlockNote is a full-stack document editor built with:
